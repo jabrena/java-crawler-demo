@@ -6,3 +6,4 @@ target/
 .flattened-pom.xml
 *.log
 .classpath
+CURSOR-RULES-JAVA.md

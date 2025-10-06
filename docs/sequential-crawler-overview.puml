@@ -1,0 +1,52 @@
+@startuml
+!theme plain
+title Sequential Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "SequentialCrawler" as Crawler
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+loop For each URL in queue (breadth-first)
+Crawler -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Crawler: HTML Document
+deactivate Jsoup
+
+Crawler -> Crawler: Extract title, content, links
+Crawler -> Result: Add successful page
+activate Result
+Result --> Crawler: Updated result
+deactivate Result
+
+Crawler -> Crawler: Queue new links\n(if depth < maxDepth)
+end
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Crawler
+  Sequential Processing:
+  - Single-threaded execution
+  - Breadth-first traversal
+  - Respects depth and page limits
+  - Tracks visited URLs
+end note
+
+@enduml
+
