@@ -1,0 +1,2 @@
+- https://horstmann.com/unblog/2020-12-05/Crawler.java
+- https://softwaremill.com/critique-of-jep-505-structured-concurrency-fifth-preview/
