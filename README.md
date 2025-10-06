@@ -13,6 +13,11 @@ A web crawler implementations in Java.
 - Strategy Pattern (Pluggable Components)
 - Visitor Pattern (Content Processing)
 
+## How to test
+
+```bash
+./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v1.CrawlerExample"
+```
 
 ## Key Design Considerations Across All Approaches:
 

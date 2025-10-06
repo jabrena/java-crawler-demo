@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A simple sequential web crawler that processes URLs one by one.
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
  * - Maintains a visited set to avoid duplicates
  * - Respects maximum depth and page limits
  */
-public class SequentialCrawler {
+public class SequentialCrawler implements Crawler {
 
     private final int maxDepth;
     private final int maxPages;
@@ -52,15 +51,10 @@ public class SequentialCrawler {
         urlQueue.offer(new UrlDepthPair(seedUrl, 0));
         visitedUrls.add(normalizeUrl(seedUrl));
 
-        System.out.println("Starting sequential crawl from: " + seedUrl);
-
         while (!urlQueue.isEmpty() && result.getTotalPagesCrawled() < maxPages) {
             UrlDepthPair current = urlQueue.poll();
             String url = current.url();
             int depth = current.depth();
-
-            System.out.printf("Crawling [depth=%d, queue=%d]: %s%n",
-                depth, urlQueue.size(), url);
 
             try {
                 // Fetch and parse the page
@@ -91,13 +85,11 @@ public class SequentialCrawler {
                 }
 
             } catch (IOException e) {
-                System.err.println("Failed to crawl " + url + ": " + e.getMessage());
                 result = result.withFailedUrl(url);
             }
         }
 
         result = result.markComplete();
-        System.out.println("\nCrawl completed: " + result);
         return result;
     }
 
