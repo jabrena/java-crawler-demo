@@ -1,5 +1,9 @@
 package info.jab.crawler.v1;
 
+import info.jab.crawler.commons.Crawler;
+import info.jab.crawler.commons.Page;
+import info.jab.crawler.commons.CrawlResult;
+
 /**
  * Example demonstrating how to use the SequentialCrawler to crawl a website.
  *
@@ -12,7 +16,7 @@ package info.jab.crawler.v1;
  * To run this example:
  *   mvn compile exec:java -Dexec.mainClass="info.jab.crawler.v1.CrawlerUsageExample"
  */
-public class CrawlerExample {
+public class SequentialCrawlerExample {
 
     public static void main(String[] args) {
         System.out.println("=".repeat(80));

@@ -1,5 +1,8 @@
 package info.jab.crawler.v1;
 
+import info.jab.crawler.commons.Crawler;
+import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.Page;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
