@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.commons;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,4 +115,5 @@ public record CrawlResult(
         );
     }
 }
+
 

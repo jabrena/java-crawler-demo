@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.v2;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
@@ -9,13 +9,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for SequentialCrawler using mocked scenarios.
+ * Unit tests for ProducerConsumerCrawler using mocked scenarios.
  *
  * Note: Since JSOUP's Jsoup.connect() is a static method that's hard to mock,
  * these tests focus on testing the crawler's configuration and domain models.
  * For full integration testing with mocked HTTP responses, see the WireMock tests.
  */
-class SequentialCrawlerTest {
+class ProducerConsumerCrawlerTest {
 
     @Test
     @DisplayName("Builder should create crawler with default values")
@@ -23,7 +23,7 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When
-        SequentialCrawler crawler = new SequentialCrawler.Builder().build();
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder().build();
 
         // Then
         assertThat(crawler).isNotNull();
@@ -35,12 +35,13 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(3)
             .maxPages(100)
             .timeout(10000)
             .followExternalLinks(true)
             .startDomain("example.com")
+            .numThreads(8)
             .build();
 
         // Then
@@ -53,7 +54,7 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxDepth(-1))
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -63,10 +64,10 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxPages(0))
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxPages(-10))
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -76,10 +77,23 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().timeout(0))
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().timeout(-5000))
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().timeout(-5000))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Builder should reject zero or negative numThreads")
+    void testBuilderRejectsInvalidNumThreads() {
+        // Given - no setup needed
+
+        // When & Then
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().numThreads(0))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().numThreads(-4))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

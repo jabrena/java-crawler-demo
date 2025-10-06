@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.commons;
 
 import java.util.List;
 
@@ -35,4 +35,5 @@ public record Page(
         return statusCode >= 200 && statusCode < 300;
     }
 }
+
 

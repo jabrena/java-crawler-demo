@@ -5,7 +5,7 @@ A web crawler implementations in Java.
 ## Design alternatives
 
 - [V1: Sequential](./docs/sequential-crawler-overview.png)
-- Producer-Consumer Pattern (Multi-threaded)
+- [V2: Producer-Consumer Pattern (Multi-threaded)](./docs/producer-consumer-crawler-overview.png)
 - Recursive Design
 - Event-Driven/Reactive Design
 - Actor Model (Message-Passing)
@@ -16,7 +16,8 @@ A web crawler implementations in Java.
 ## How to test
 
 ```bash
-./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v1.CrawlerExample"
+./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v1.SequentialCrawlerExample"
+./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v2.ProducerConsumerCrawlerExample"
 ```
 
 ## Key Design Considerations Across All Approaches:

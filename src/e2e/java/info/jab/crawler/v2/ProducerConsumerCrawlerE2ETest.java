@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.v2;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-End tests for SequentialCrawler against real websites.
+ * End-to-End tests for ProducerConsumerCrawler against real websites.
  *
  * These tests crawl actual websites and should only be run when explicitly enabled
  * via Maven profile or system property to avoid hitting real sites during regular builds.
@@ -18,24 +18,25 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Or: mvn test -Dtest.e2e=true
  */
 @EnabledIfSystemProperty(named = "test.e2e", matches = "true")
-class SequentialCrawlerE2ETest {
+class ProducerConsumerCrawlerE2ETest {
 
     private static final String TARGET_URL = "https://jabrena.github.io/cursor-rules-java/";
 
     @Test
-    @DisplayName("E2E: Should crawl cursor-rules-java website successfully")
+    @DisplayName("E2E: Should crawl cursor-rules-java website successfully with multiple threads")
     void testCrawlCursorRulesJavaWebsite() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(2)
             .maxPages(10)
             .timeout(10000)  // Longer timeout for real sites
             .followExternalLinks(false)  // Stay on the same domain
             .startDomain("jabrena.github.io")
+            .numThreads(4)
             .build();
 
         // When
-        System.out.println("\n=== Starting E2E Test ===");
+        System.out.println("\n=== Starting E2E Test (Producer-Consumer) ===");
         System.out.println("Target: " + TARGET_URL);
 
         CrawlResult result = crawler.crawl(TARGET_URL);
@@ -98,12 +99,13 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should respect depth limit on real website")
     void testDepthLimitOnRealWebsite() {
         // Given - crawl with depth 0 (only seed URL)
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(0)
             .maxPages(10)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
+            .numThreads(2)
             .build();
 
         // When
@@ -116,15 +118,16 @@ class SequentialCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should handle real-world link extraction")
+    @DisplayName("E2E: Should handle real-world link extraction with multiple threads")
     void testLinkExtractionOnRealWebsite() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(1)
             .maxPages(3)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
+            .numThreads(3)
             .build();
 
         // When
@@ -153,12 +156,13 @@ class SequentialCrawlerE2ETest {
     void testPageLimitOnRealWebsite() {
         // Given
         int pageLimit = 5;
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(3)
             .maxPages(pageLimit)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
+            .numThreads(4)
             .build();
 
         // When
@@ -174,12 +178,13 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should extract meaningful page titles from real site")
     void testPageTitleExtraction() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
             .maxDepth(1)
             .maxPages(5)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
+            .numThreads(3)
             .build();
 
         // When
@@ -195,6 +200,49 @@ class SequentialCrawlerE2ETest {
             .as("Most pages should have meaningful titles")
             .filteredOn(page -> !page.title().isBlank())
             .hasSizeGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("E2E: Should benefit from multi-threading with larger crawl")
+    void testMultiThreadedPerformance() {
+        // Given - Test with more threads should potentially complete faster
+        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+            .maxDepth(2)
+            .maxPages(15)
+            .timeout(10000)
+            .followExternalLinks(false)
+            .startDomain("jabrena.github.io")
+            .numThreads(6)
+            .build();
+
+        // When
+        long startTime = System.currentTimeMillis();
+        CrawlResult result = crawler.crawl(TARGET_URL);
+        long duration = System.currentTimeMillis() - startTime;
+
+        // Then
+        System.out.println("\n=== Multi-threaded Performance Test ===");
+        System.out.println("Pages crawled: " + result.getTotalPagesCrawled());
+        System.out.println("Duration: " + duration + "ms");
+        System.out.println("Failed URLs: " + result.getTotalFailures());
+
+        assertThat(result.getTotalPagesCrawled())
+            .as("Should crawl multiple pages")
+            .isGreaterThanOrEqualTo(5);
+
+        assertThat(duration)
+            .as("Should complete in reasonable time")
+            .isLessThan(60000);
+
+        // Verify no duplicate pages were crawled
+        long uniqueUrls = result.successfulPages().stream()
+            .map(Page::url)
+            .distinct()
+            .count();
+
+        assertThat(uniqueUrls)
+            .as("All crawled pages should have unique URLs (no duplicates)")
+            .isEqualTo(result.getTotalPagesCrawled());
     }
 }
 

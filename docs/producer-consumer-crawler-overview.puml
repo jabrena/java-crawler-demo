@@ -1,0 +1,142 @@
+@startuml
+!theme plain
+title Producer-Consumer Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "ProducerConsumerCrawler" as Crawler
+participant "ExecutorService" as Executor
+participant "BlockingQueue<UrlDepthPair>" as Queue
+participant "Worker Thread 1" as Worker1
+participant "Worker Thread 2" as Worker2
+participant "Worker Thread N" as WorkerN
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.numThreads(4)\n.maxPages(100)\n.build()
+activate Crawler
+
+== Web Crawling Process (Multi-threaded) ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> Queue: Initialize with seed URL
+activate Queue
+Crawler -> Executor: Create thread pool\n(numThreads workers)
+activate Executor
+
+Executor -> Worker1: Start worker thread
+activate Worker1
+Executor -> Worker2: Start worker thread
+activate Worker2
+Executor -> WorkerN: Start worker thread
+activate WorkerN
+
+loop Until queue empty and no active workers
+
+Worker1 -> Queue: poll(timeout)
+Queue --> Worker1: UrlDepthPair(url, depth)
+
+Worker1 -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Worker1: HTML Document
+deactivate Jsoup
+
+Worker1 -> Worker1: Extract title, content, links
+Worker1 -> Result: Add successful page
+activate Result
+Result --> Worker1: Updated result
+deactivate Result
+
+Worker1 -> Queue: Offer new links\n(if depth < maxDepth)
+
+|||
+
+Worker2 -> Queue: poll(timeout)
+Queue --> Worker2: UrlDepthPair(url, depth)
+
+Worker2 -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Worker2: HTML Document
+deactivate Jsoup
+
+Worker2 -> Worker2: Extract title, content, links
+Worker2 -> Result: Add successful page
+activate Result
+Result --> Worker2: Updated result
+deactivate Result
+
+Worker2 -> Queue: Offer new links\n(if depth < maxDepth)
+
+|||
+
+WorkerN -> Queue: poll(timeout)
+Queue --> WorkerN: UrlDepthPair(url, depth)
+
+WorkerN -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> WorkerN: HTML Document
+deactivate Jsoup
+
+WorkerN -> WorkerN: Extract title, content, links
+WorkerN -> Result: Add successful page
+activate Result
+Result --> WorkerN: Updated result
+deactivate Result
+
+WorkerN -> Queue: Offer new links\n(if depth < maxDepth)
+
+end
+
+Worker1 -> Queue: Offer POISON_PILL\n(when done)
+Worker1 -> Worker1: Shutdown
+deactivate Worker1
+
+Worker2 -> Queue: poll() - receives POISON_PILL
+Worker2 -> Queue: Pass POISON_PILL to others
+Worker2 -> Worker2: Shutdown
+deactivate Worker2
+
+WorkerN -> Queue: poll() - receives POISON_PILL
+WorkerN -> WorkerN: Shutdown
+deactivate WorkerN
+
+Executor -> Executor: awaitTermination()
+deactivate Executor
+deactivate Queue
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Duration and throughput
+end note
+
+note left of Crawler
+  Producer-Consumer Pattern:
+  - Multi-threaded execution
+  - Shared BlockingQueue for URL frontier
+  - Thread-safe collections:
+    * ConcurrentHashMap (visited URLs)
+    * AtomicInteger (page counter)
+    * Synchronized lists (results)
+  - Workers act as both producers
+    and consumers of URLs
+  - Poison pill pattern for clean shutdown
+  - Respects depth and page limits
+end note
+
+note right of Queue
+  Thread Coordination:
+  - BlockingQueue coordinates workers
+  - Workers poll URLs with timeout
+  - Thread-safe add/check for visited URLs
+  - Atomic page counting prevents overflow
+  - Active worker tracking ensures completion
+end note
+
+@enduml
+

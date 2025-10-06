@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.commons;
 
 /**
  * Interface for web crawlers that traverse and extract information from web pages.
@@ -34,4 +34,5 @@ public interface Crawler {
      */
     CrawlResult crawl(String seedUrl);
 }
+
 
