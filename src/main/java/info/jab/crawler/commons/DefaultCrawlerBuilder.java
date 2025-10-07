@@ -120,6 +120,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case PRODUCER_CONSUMER -> new info.jab.crawler.v2.ProducerConsumerCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
             );
+            case RECURSIVE -> new info.jab.crawler.v3.RecursiveCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
+            );
         };
     }
 }

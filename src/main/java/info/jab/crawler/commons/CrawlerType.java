@@ -18,7 +18,13 @@ public enum CrawlerType {
      * Producer-consumer crawler implementation.
      * Uses multiple threads with a producer-consumer pattern for parallel processing.
      */
-    PRODUCER_CONSUMER;
+    PRODUCER_CONSUMER,
+
+    /**
+     * Recursive crawler implementation.
+     * Uses recursive approach with trampoline pattern for safe deep recursion.
+     */
+    RECURSIVE;
 
     /**
      * Creates a new builder instance for the selected crawler type.
