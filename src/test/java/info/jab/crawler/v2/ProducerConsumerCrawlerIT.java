@@ -2,6 +2,8 @@ package info.jab.crawler.v2;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterEach;
@@ -80,7 +82,7 @@ class ProducerConsumerCrawlerIT {
     @DisplayName("Should crawl all 3 pages starting from index using multiple threads")
     void testCrawlAllPages() {
         // Given
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -127,7 +129,7 @@ class ProducerConsumerCrawlerIT {
     @DisplayName("Should respect maxPages limit")
     void testMaxPagesLimit() {
         // Given
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(2)
             .maxPages(2)  // Limit to 2 pages
             .timeout(5000)
@@ -146,7 +148,7 @@ class ProducerConsumerCrawlerIT {
     @DisplayName("Should respect maxDepth limit")
     void testMaxDepthLimit() {
         // Given
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(0)  // Only crawl the seed URL
             .maxPages(10)
             .timeout(5000)
@@ -167,7 +169,7 @@ class ProducerConsumerCrawlerIT {
     @DisplayName("Should extract correct number of links from each page")
     void testLinkExtraction() {
         // Given
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -212,7 +214,7 @@ class ProducerConsumerCrawlerIT {
         stubFor(get(urlEqualTo("/broken.html"))
             .willReturn(aResponse().withStatus(404)));
 
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -246,7 +248,7 @@ class ProducerConsumerCrawlerIT {
                 .withHeader("Content-Type", "text/html")
                 .withBodyFile("target.html")));
 
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -268,7 +270,7 @@ class ProducerConsumerCrawlerIT {
     @DisplayName("Should extract page content correctly")
     void testContentExtraction() {
         // Given
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(0)
             .maxPages(1)
             .timeout(5000)
@@ -297,7 +299,7 @@ class ProducerConsumerCrawlerIT {
             WireMock.reset();
             setupMockWebsite();
 
-            ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+            ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
                 .maxDepth(2)
                 .maxPages(10)
                 .timeout(5000)

@@ -2,6 +2,8 @@ package info.jab.crawler.v1;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -26,7 +28,7 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should crawl cursor-rules-java website successfully")
     void testCrawlCursorRulesJavaWebsite() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(2)
             .maxPages(10)
             .timeout(10000)  // Longer timeout for real sites
@@ -98,7 +100,7 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should respect depth limit on real website")
     void testDepthLimitOnRealWebsite() {
         // Given - crawl with depth 0 (only seed URL)
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(0)
             .maxPages(10)
             .timeout(10000)
@@ -119,7 +121,7 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should handle real-world link extraction")
     void testLinkExtractionOnRealWebsite() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(1)
             .maxPages(3)
             .timeout(10000)
@@ -153,7 +155,7 @@ class SequentialCrawlerE2ETest {
     void testPageLimitOnRealWebsite() {
         // Given
         int pageLimit = 5;
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(3)
             .maxPages(pageLimit)
             .timeout(10000)
@@ -174,7 +176,7 @@ class SequentialCrawlerE2ETest {
     @DisplayName("E2E: Should extract meaningful page titles from real site")
     void testPageTitleExtraction() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(1)
             .maxPages(5)
             .timeout(10000)

@@ -2,6 +2,8 @@ package info.jab.crawler.v1;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterEach;
@@ -83,7 +85,7 @@ class SequentialCrawlerIT {
     @DisplayName("Should crawl all 3 pages starting from index")
     void testCrawlAllPages() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -131,7 +133,7 @@ class SequentialCrawlerIT {
     @DisplayName("Should respect maxPages limit")
     void testMaxPagesLimit() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(2)
             .maxPages(2)  // Limit to 2 pages
             .timeout(5000)
@@ -149,7 +151,7 @@ class SequentialCrawlerIT {
     @DisplayName("Should respect maxDepth limit")
     void testMaxDepthLimit() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(0)  // Only crawl the seed URL
             .maxPages(10)
             .timeout(5000)
@@ -169,7 +171,7 @@ class SequentialCrawlerIT {
     @DisplayName("Should extract correct number of links from each page")
     void testLinkExtraction() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -213,7 +215,7 @@ class SequentialCrawlerIT {
         stubFor(get(urlEqualTo("/broken.html"))
             .willReturn(aResponse().withStatus(404)));
 
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -246,7 +248,7 @@ class SequentialCrawlerIT {
                 .withHeader("Content-Type", "text/html")
                 .withBodyFile("target.html")));
 
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -267,7 +269,7 @@ class SequentialCrawlerIT {
     @DisplayName("Should extract page content correctly")
     void testContentExtraction() {
         // Given
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(0)
             .maxPages(1)
             .timeout(5000)

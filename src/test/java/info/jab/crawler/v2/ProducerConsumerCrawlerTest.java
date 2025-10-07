@@ -2,6 +2,8 @@ package info.jab.crawler.v2;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -23,7 +25,9 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder().build();
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.PRODUCER_CONSUMER)
+            .build();
 
         // Then
         assertThat(crawler).isNotNull();
@@ -35,7 +39,8 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When
-        ProducerConsumerCrawler crawler = new ProducerConsumerCrawler.Builder()
+        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.PRODUCER_CONSUMER)
             .maxDepth(3)
             .maxPages(100)
             .timeout(10000)
@@ -54,7 +59,7 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxDepth(-1))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -64,10 +69,10 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxPages(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().maxPages(-10))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -77,10 +82,10 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().timeout(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().timeout(-5000))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).timeout(-5000))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -90,10 +95,10 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().numThreads(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).numThreads(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new ProducerConsumerCrawler.Builder().numThreads(-4))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).numThreads(-4))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
