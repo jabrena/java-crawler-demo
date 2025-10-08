@@ -3,7 +3,6 @@ package info.jab.crawler.v1;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import info.jab.crawler.commons.CrawlerBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -107,6 +106,7 @@ public class SequentialCrawler implements Crawler {
             .map(element -> element.absUrl("href"))
             .filter(link -> !link.isEmpty())
             .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
+            .filter(link -> !link.contains("#")) // Exclude fragment-only links
             .toList();
     }
 
@@ -143,4 +143,3 @@ public class SequentialCrawler implements Crawler {
     private record UrlDepthPair(String url, int depth) {}
 
 }
-

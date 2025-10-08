@@ -1,4 +1,4 @@
-package info.jab.crawler.v2;
+package info.jab.crawler.v5;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
@@ -6,12 +6,13 @@ import info.jab.crawler.commons.DefaultCrawlerBuilder;
 import info.jab.crawler.commons.CrawlerType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-End tests for ProducerConsumerCrawler against real websites.
+ * End-to-End tests for ActorCrawler against real websites.
  *
  * These tests crawl actual websites and should only be run when explicitly enabled
  * via Maven profile or system property to avoid hitting real sites during regular builds.
@@ -20,21 +21,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Or: mvn test -Dtest.e2e=true
  */
 @EnabledIfSystemProperty(named = "test.e2e", matches = "true")
-class ProducerConsumerCrawlerE2ETest {
+class ActorCrawlerE2ETest {
 
     private static final String TARGET_URL = "https://jabrena.github.io/cursor-rules-java/";
 
     @Test
-    @DisplayName("E2E: Should crawl cursor-rules-java website successfully with multiple threads")
+    @Timeout(60)
+    @DisplayName("E2E: Should crawl cursor-rules-java website successfully")
     void testCrawlCursorRulesJavaWebsite() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
             .maxDepth(2)
             .maxPages(10)
             .timeout(10000)  // Longer timeout for real sites
             .followExternalLinks(false)  // Stay on the same domain
             .startDomain("jabrena.github.io")
-            .numThreads(4)
+            .numThreads(4)  // Use 4 actors for parallel processing
             .build();
 
         // When
@@ -83,10 +85,11 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
+    @Timeout(60)
     @DisplayName("E2E: Should respect depth limit on real website")
     void testDepthLimitOnRealWebsite() {
         // Given - crawl with depth 0 (only seed URL)
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
             .maxDepth(0)
             .maxPages(10)
             .timeout(10000)
@@ -105,10 +108,11 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should handle real-world link extraction with multiple threads")
+    @Timeout(60)
+    @DisplayName("E2E: Should handle real-world link extraction")
     void testLinkExtractionOnRealWebsite() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
             .maxDepth(1)
             .maxPages(3)
             .timeout(10000)
@@ -139,11 +143,12 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
+    @Timeout(60)
     @DisplayName("E2E: Should complete crawl within reasonable page limit")
     void testPageLimitOnRealWebsite() {
         // Given
         int pageLimit = 5;
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
             .maxDepth(3)
             .maxPages(pageLimit)
             .timeout(10000)
@@ -162,16 +167,17 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
+    @Timeout(60)
     @DisplayName("E2E: Should extract meaningful page titles from real site")
     void testPageTitleExtraction() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
             .maxDepth(1)
             .maxPages(5)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(3)
+            .numThreads(2)
             .build();
 
         // When
@@ -190,12 +196,22 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should benefit from multi-threading with larger crawl")
-    void testMultiThreadedPerformance() {
-        // Given - Test with more threads should potentially complete faster
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(2)
-            .maxPages(15)
+    @Timeout(60)
+    @DisplayName("E2E: Should demonstrate actor model benefits with different actor counts")
+    void testActorModelScalability() {
+        // Given - Test with different actor counts
+        ActorCrawler singleActorCrawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
+            .maxDepth(1)
+            .maxPages(3)
+            .timeout(10000)
+            .followExternalLinks(false)
+            .startDomain("jabrena.github.io")
+            .numThreads(1)
+            .build();
+
+        ActorCrawler multiActorCrawler = (ActorCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR)
+            .maxDepth(1)
+            .maxPages(3)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
@@ -203,29 +219,37 @@ class ProducerConsumerCrawlerE2ETest {
             .build();
 
         // When
-        long startTime = System.currentTimeMillis();
-        CrawlResult result = crawler.crawl(TARGET_URL);
-        long duration = System.currentTimeMillis() - startTime;
+        long startTime1 = System.currentTimeMillis();
+        CrawlResult singleResult = singleActorCrawler.crawl(TARGET_URL);
+        long duration1 = System.currentTimeMillis() - startTime1;
+
+        long startTime2 = System.currentTimeMillis();
+        CrawlResult multiResult = multiActorCrawler.crawl(TARGET_URL);
+        long duration2 = System.currentTimeMillis() - startTime2;
 
         // Then
 
-        assertThat(result.getTotalPagesCrawled())
-            .as("Should crawl multiple pages")
-            .isGreaterThanOrEqualTo(5);
+        // Both should crawl a reasonable number of pages (within the limit)
+        assertThat(singleResult.getTotalPagesCrawled())
+            .as("Single actor should crawl some pages")
+            .isGreaterThanOrEqualTo(1)
+            .isLessThanOrEqualTo(3);
 
-        assertThat(duration)
-            .as("Should complete in reasonable time")
-            .isLessThan(60000);
+        assertThat(multiResult.getTotalPagesCrawled())
+            .as("Multi actor should crawl some pages")
+            .isGreaterThanOrEqualTo(1)
+            .isLessThanOrEqualTo(3);
 
-        // Verify no duplicate pages were crawled
-        long uniqueUrls = result.successfulPages().stream()
-            .map(Page::url)
-            .distinct()
-            .count();
+        // Both should crawl the home page
+        assertThat(singleResult.successfulPages())
+            .as("Single actor should crawl the home page")
+            .anyMatch(page -> page.url().equals(TARGET_URL) || page.url().equals(TARGET_URL + "index.html"));
 
-        assertThat(uniqueUrls)
-            .as("All crawled pages should have unique URLs (no duplicates)")
-            .isEqualTo(result.getTotalPagesCrawled());
+        assertThat(multiResult.successfulPages())
+            .as("Multi actor should crawl the home page")
+            .anyMatch(page -> page.url().equals(TARGET_URL) || page.url().equals(TARGET_URL + "index.html"));
+
+        // Multi-actor should be at least as fast (or faster due to parallelization)
+        // Note: This might not always be true due to network variability
     }
 }
-

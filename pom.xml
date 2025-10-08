@@ -10,6 +10,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>25</java.version>
+    <maven.compiler.compilerArgs>--enable-preview</maven.compiler.compilerArgs>
+    <maven.compiler.testCompilerArgs>--enable-preview</maven.compiler.testCompilerArgs>
   </properties>
 
   <dependencyManagement>
@@ -57,6 +59,19 @@
       <version>3.27.6</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- JMH for performance profiling -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>1.37</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>1.37</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -67,6 +82,7 @@
         <version>3.14.1</version>
         <configuration>
           <release>${java.version}</release>
+          <enablePreview>true</enablePreview>
         </configuration>
       </plugin>
       <!-- Maven Surefire Plugin for Unit Tests -->
@@ -84,6 +100,7 @@
             <exclude>**/*IT.java</exclude>
             <exclude>**/*IntegrationTest.java</exclude>
           </excludes>
+          <argLine>--enable-preview</argLine>
         </configuration>
       </plugin>
 
@@ -98,6 +115,7 @@
             <include>**/*IT.java</include>
             <include>**/*IntegrationTest.java</include>
           </includes>
+          <argLine>--enable-preview</argLine>
         </configuration>
         <executions>
           <execution>
@@ -147,6 +165,7 @@
               <includes>
                 <include>**/*E2ETest.java</include>
               </includes>
+              <argLine>--enable-preview</argLine>
             </configuration>
             <executions>
               <execution>
@@ -189,6 +208,11 @@
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <version>3.6.1</version>
+            <configuration>
+              <options>
+                <option>--enable-preview</option>
+              </options>
+            </configuration>
           </plugin>
         </plugins>
       </build>

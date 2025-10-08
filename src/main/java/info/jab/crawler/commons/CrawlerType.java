@@ -31,7 +31,38 @@ public enum CrawlerType {
      * Combines multi-threading with recursive design using trampoline pattern.
      * Provides parallel performance with stack-safe deep recursion.
      */
-    MULTI_THREADED_RECURSIVE;
+    MULTI_THREADED_RECURSIVE,
+
+    /**
+     * Actor model crawler implementation.
+     * Uses CompletableFuture-based actors with supervisor pattern for coordination.
+     * Provides fault tolerance, message passing, and parallel processing.
+     */
+    ACTOR,
+
+    /**
+     * Recursive actor model crawler implementation.
+     * Combines actor model with recursive design for natural tree-like crawling.
+     * Each actor can spawn child actors for discovered links, creating dynamic actor trees.
+     * Uses trampoline pattern for safe deep recursion and message passing for coordination.
+     */
+    RECURSIVE_ACTOR,
+
+    /**
+     * Structural concurrency crawler implementation.
+     * Uses Java 25's StructuredTaskScope for managing concurrent subtasks within well-defined scopes.
+     * Provides automatic cancellation, cleanup, and simplified error handling.
+     * Natural tree-like crawling structure with proper resource management through structured scoping.
+     */
+    STRUCTURAL_CONCURRENCY,
+
+    /**
+     * Hybrid actor-structural concurrency crawler implementation.
+     * Combines actor model pattern for coordination and state management with structural concurrency for actual crawling work.
+     * Uses supervisor actor for fault tolerance and message-based coordination while leveraging StructuredTaskScope for efficient parallel crawling.
+     * Provides the best of both paradigms: actor-based coordination with automatic resource management.
+     */
+    HYBRID_ACTOR_STRUCTURAL;
 
     /**
      * Creates a new builder instance for the selected crawler type.

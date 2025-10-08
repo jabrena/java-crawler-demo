@@ -126,6 +126,18 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case MULTI_THREADED_RECURSIVE -> new info.jab.crawler.v4.MultiThreadedRecursiveCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
             );
+            case ACTOR -> new info.jab.crawler.v5.ActorCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
+            case RECURSIVE_ACTOR -> new info.jab.crawler.v6.RecursiveActorCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
+            case STRUCTURAL_CONCURRENCY -> new info.jab.crawler.v7.StructuralConcurrencyCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
+            );
+            case HYBRID_ACTOR_STRUCTURAL -> new info.jab.crawler.v8.HybridActorStructuralCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
         };
     }
 }

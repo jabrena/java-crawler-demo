@@ -1,9 +1,10 @@
-package info.jab.crawler.v4;
+package info.jab.crawler.v5;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.DefaultCrawlerBuilder;
 import info.jab.crawler.commons.CrawlerType;
+import info.jab.crawler.v5.Message.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -11,13 +12,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for MultiThreadedRecursiveCrawler using mocked scenarios.
+ * Unit tests for ActorCrawler using mocked scenarios.
  *
  * Note: Since JSOUP's Jsoup.connect() is a static method that's hard to mock,
  * these tests focus on testing the crawler's configuration and domain models.
  * For full integration testing with mocked HTTP responses, see the WireMock tests.
  */
-class MultiThreadedRecursiveCrawlerTest {
+class ActorCrawlerTest {
 
     @Test
     @DisplayName("Builder should create crawler with default values")
@@ -25,8 +26,8 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When
-        MultiThreadedRecursiveCrawler crawler = (MultiThreadedRecursiveCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.ACTOR)
             .build();
 
         // Then
@@ -39,8 +40,8 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When
-        MultiThreadedRecursiveCrawler crawler = (MultiThreadedRecursiveCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.ACTOR)
             .maxDepth(3)
             .maxPages(100)
             .timeout(10000)
@@ -59,7 +60,7 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxDepth(-1))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -69,10 +70,10 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxPages(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxPages(-10))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -82,10 +83,10 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).timeout(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).timeout(-5000))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).timeout(-5000))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -95,10 +96,124 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).numThreads(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).numThreads(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).numThreads(-4))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.ACTOR).numThreads(-5))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("CrawlMessage should validate URL")
+    void testCrawlMessageValidation() {
+        // Given - no setup needed
+
+        // When & Then
+        assertThatThrownBy(() -> new CrawlMessage(null, 0))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new CrawlMessage("", 0))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new CrawlMessage("   ", 0))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new CrawlMessage("http://test.com", -1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("ResultMessage should validate page")
+    void testResultMessageValidation() {
+        // Given
+        Page validPage = new Page("http://test.com", "Test", 200, "Content", java.util.List.of());
+
+        // When & Then
+        assertThatThrownBy(() -> new ResultMessage(null, java.util.List.of(), 0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("ErrorMessage should validate parameters")
+    void testErrorMessageValidation() {
+        // Given
+        Exception validException = new RuntimeException("Test error");
+
+        // When & Then
+        assertThatThrownBy(() -> new ErrorMessage(null, validException))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new ErrorMessage("", validException))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new ErrorMessage("http://test.com", null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Messages should be immutable")
+    void testMessageImmutability() {
+        // Given
+        CrawlMessage crawlMsg = new CrawlMessage("http://test.com", 1);
+        Page page = new Page("http://test.com", "Test", 200, "Content", java.util.List.of());
+        ResultMessage resultMsg = new ResultMessage(page, java.util.List.of("http://link1.com"), 0);
+        ErrorMessage errorMsg = new ErrorMessage("http://test.com", new RuntimeException("Error"));
+        CompletionMessage completionMsg = new CompletionMessage();
+
+        // When & Then - all messages should be immutable
+        assertThat(crawlMsg.url()).isEqualTo("http://test.com");
+        assertThat(crawlMsg.depth()).isEqualTo(1);
+        assertThat(resultMsg.page()).isEqualTo(page);
+        assertThat(resultMsg.newLinks()).hasSize(1);
+        assertThat(errorMsg.url()).isEqualTo("http://test.com");
+        assertThat(errorMsg.error()).isInstanceOf(RuntimeException.class);
+        assertThat(completionMsg).isNotNull();
+    }
+
+    @Test
+    @DisplayName("ResultMessage should provide immutable links list")
+    void testResultMessageLinksImmutability() {
+        // Given
+        Page page = new Page("http://test.com", "Test", 200, "Content", java.util.List.of());
+        java.util.List<String> originalLinks = new java.util.ArrayList<>();
+        originalLinks.add("http://link1.com");
+        originalLinks.add("http://link2.com");
+        ResultMessage resultMsg = new ResultMessage(page, originalLinks, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> resultMsg.newLinks().add("http://link3.com"))
+            .isInstanceOf(UnsupportedOperationException.class);
+
+        // Original list should be unchanged
+        assertThat(originalLinks).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("ActorCrawler should reject null seed URL")
+    void testActorCrawlerRejectsNullSeedUrl() {
+        // Given
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.ACTOR)
+            .build();
+
+        // When & Then
+        assertThatThrownBy(() -> crawler.crawl(null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("ActorCrawler should reject empty seed URL")
+    void testActorCrawlerRejectsEmptySeedUrl() {
+        // Given
+        ActorCrawler crawler = (ActorCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.ACTOR)
+            .build();
+
+        // When & Then
+        assertThatThrownBy(() -> crawler.crawl(""))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> crawler.crawl("   "))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -3,7 +3,6 @@ package info.jab.crawler.v2;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import info.jab.crawler.commons.CrawlerBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 

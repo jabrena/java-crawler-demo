@@ -41,28 +41,11 @@ class RecursiveCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Starting Recursive E2E Test ===");
-        System.out.println("Target: " + TARGET_URL);
-        System.out.println("Using trampoline pattern for safe deep recursion");
-
         long startTime = System.currentTimeMillis();
         CrawlResult result = crawler.crawl(TARGET_URL);
         long endTime = System.currentTimeMillis();
 
         // Then
-        System.out.println("\n=== Recursive E2E Test Results ===");
-        System.out.println(result);
-        System.out.printf("Execution time: %d ms%n", endTime - startTime);
-        System.out.println("\nPages crawled (depth-first traversal):");
-        result.successfulPages().forEach(page ->
-            System.out.printf("  - %s (title: %s, links: %d)%n",
-                page.url(), page.title(), page.links().size())
-        );
-
-        if (!result.failedUrls().isEmpty()) {
-            System.out.println("\nFailed URLs:");
-            result.failedUrls().forEach(url -> System.out.println("  - " + url));
-        }
 
         // Assertions
         assertThat(result.getTotalPagesCrawled())
@@ -225,17 +208,11 @@ class RecursiveCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Testing Trampoline Pattern Benefits ===");
-        System.out.println("Deep recursion (depth=5) - safe with trampoline pattern");
-
         long startTime = System.currentTimeMillis();
         CrawlResult result = crawler.crawl(TARGET_URL);
         long endTime = System.currentTimeMillis();
 
         // Then
-        System.out.printf("Deep recursive crawl completed in %d ms%n", endTime - startTime);
-        System.out.printf("Pages crawled: %d%n", result.getTotalPagesCrawled());
-        System.out.println("✓ No stack overflow occurred - trampoline pattern working correctly");
 
         // Verify the crawl completed successfully
         assertThat(result.getTotalPagesCrawled())
@@ -266,15 +243,9 @@ class RecursiveCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Testing Functional Programming Approach ===");
-        System.out.println("Using immutable state and pure functions");
-
         CrawlResult result = crawler.crawl(TARGET_URL);
 
         // Then
-        System.out.println("✓ Crawl completed using functional approach");
-        System.out.println("✓ All state changes produced new immutable instances");
-        System.out.println("✓ No mutable state during recursive traversal");
 
         // Verify functional programming characteristics
         assertThat(result.successfulPages())
@@ -289,7 +260,5 @@ class RecursiveCrawlerE2ETest {
 
         assertThatThrownBy(() -> finalResult.failedUrls().add("http://test.com/fail"))
             .isInstanceOf(UnsupportedOperationException.class);
-
-        System.out.println("✓ CrawlResult is truly immutable");
     }
 }

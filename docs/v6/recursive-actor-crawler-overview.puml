@@ -1,0 +1,116 @@
+@startuml
+!theme plain
+title Recursive Actor Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "RecursiveActorCrawler" as Crawler
+participant "RecursiveActor" as RootActor
+participant "RecursiveActor" as ChildActor
+participant "CompletableFuture" as Future
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.maxActors(10)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> RootActor: new RecursiveActor(config)
+activate RootActor
+
+Crawler -> RootActor: crawlRecursively(seedUrl, 0)
+RootActor -> Future: CompletableFuture.supplyAsync()
+activate Future
+
+== Recursive Actor Processing ==
+Future -> RootActor: processUrl(url, depth)
+activate RootActor
+
+RootActor -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> RootActor: HTML Document
+deactivate Jsoup
+
+RootActor -> RootActor: Extract title, content, links
+RootActor -> Result: Add successful page
+activate Result
+Result --> RootActor: Updated result
+deactivate Result
+
+alt If depth < maxDepth and links found
+RootActor -> ChildActor: new RecursiveActor(sharedState)
+activate ChildActor
+
+loop For each discovered link
+RootActor -> ChildActor: crawlRecursively(link, depth+1)
+activate ChildActor
+ChildActor -> Future: CompletableFuture.supplyAsync()
+activate Future
+
+Future -> ChildActor: processUrl(link, depth+1)
+activate ChildActor
+
+ChildActor -> Jsoup: connect(link).get()
+activate Jsoup
+Jsoup --> ChildActor: HTML Document
+deactivate Jsoup
+
+ChildActor -> ChildActor: Extract content and links
+ChildActor -> Result: Add successful page
+activate Result
+Result --> ChildActor: Updated result
+deactivate Result
+
+ChildActor --> Future: Child processing completed
+deactivate ChildActor
+Future --> ChildActor: CompletableFuture completed
+deactivate Future
+ChildActor --> RootActor: Child actor completed
+deactivate ChildActor
+end
+
+RootActor -> Future: CompletableFuture.allOf(childFutures).join()
+activate Future
+Future --> RootActor: All child actors completed
+deactivate Future
+end
+
+RootActor --> Future: Root processing completed
+deactivate RootActor
+Future --> Crawler: CompletableFuture completed
+deactivate Future
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  Shared State Management:
+  - ConcurrentHashMap for visited URLs
+  - SynchronizedList for successful pages
+  - SynchronizedList for failed URLs
+  - AtomicInteger for page counting
+  - AtomicInteger for active actors
+end note
+
+note left of RootActor
+  Recursive Actor Features:
+  - Dynamic child actor spawning
+  - Asynchronous processing with CompletableFuture
+  - Shared state coordination
+  - Natural tree-like crawling structure
+  - Fault isolation between actors
+  - Breadth-first traversal with parallel execution
+end note
+
+note left of ChildActor
+  Child Actor Behavior:
+  - Inherits shared state from parent
+  - Processes discovered links recursively
+  - Spawns its own child actors if needed
+  - Completes asynchronously
+  - Results merged through shared collections
+end note
+
+@enduml
