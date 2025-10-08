@@ -141,6 +141,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case STRUCTURED_WORKER -> new info.jab.crawler.v9.StructuredWorkerCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
             );
+            case VIRTUAL_THREAD_ACTOR -> new info.jab.crawler.v10.VirtualThreadActorCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
         };
     }
 }

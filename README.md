@@ -77,6 +77,11 @@ java --enable-preview -cp target/classes:$(./mvnw dependency:build-classpath \
 ./mvnw compile -Pexamples
 java --enable-preview -cp target/classes:$(./mvnw dependency:build-classpath \
 -q -Dmdep.outputFile=/dev/stdout)    info.jab.crawler.v9.StructuredWorkerCrawlerExample
+# V10 Virtual Thread Actor (requires Java 21+ for virtual threads)
+# Run directly with Java (Maven exec plugin doesn't work well with virtual threads)
+./mvnw compile -Pexamples
+java -cp target/classes:$(./mvnw dependency:build-classpath \
+-q -Dmdep.outputFile=/dev/stdout)    info.jab.crawler.v10.VirtualThreadActorCrawlerExample
 ```
 
 Powered by [Cursor](https://www.cursor.com/) with ❤️ from [Madrid](https://www.google.com/maps/place/Community+of+Madrid,+Madrid/@40.4983324,-6.3162283,8z/data=!3m1!4b1!4m6!3m5!1s0xd41817a40e033b9:0x10340f3be4bc880!8m2!3d40.4167088!4d-3.5812692!16zL20vMGo0eGc?entry=ttu&g_ep=EgoyMDI1MDgxOC4wIKXMDSoASAFQAw%3D%3D)
