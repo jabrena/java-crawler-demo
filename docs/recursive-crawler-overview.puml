@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+title Recursive Crawler with Trampoline Pattern - High-Level Overview
+
+actor "Client" as Client
+participant "RecursiveCrawler" as Crawler
+participant "Trampoline" as Trampoline
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.crawlerType(RECURSIVE)\n.maxDepth(2)\n.maxPages(100)\n.build()
+activate Crawler
+
+== Recursive Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+activate Trampoline
+
+loop For each URL (breadth-first with trampoline)
+Crawler -> Trampoline: processUrl(url, depth)
+activate Trampoline
+
+Trampoline -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Trampoline: HTML Document
+deactivate Jsoup
+
+Trampoline -> Trampoline: Extract title, content, links
+Trampoline -> Result: Add successful page
+activate Result
+Result --> Trampoline: Updated result
+deactivate Result
+
+Trampoline -> Trampoline: Create recursive tasks\nfor discovered links
+Trampoline -> Trampoline: Execute trampoline\n(stack-safe recursion)
+
+Trampoline --> Crawler: Continue/Done
+deactivate Trampoline
+end
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+deactivate Trampoline
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Trampoline
+  Trampoline Pattern:
+  - Stack-safe deep recursion
+  - Functional programming approach
+  - Prevents stack overflow
+  - Elegant recursive design
+  - Breadth-first traversal
+end note
+
+note left of Crawler
+  Recursive Processing:
+  - Single-threaded execution
+  - Trampoline-based recursion
+  - Respects depth and page limits
+  - Tracks visited URLs
+  - Safe for deep crawling
+end note
+
+@enduml

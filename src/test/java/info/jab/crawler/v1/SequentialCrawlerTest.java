@@ -2,6 +2,8 @@ package info.jab.crawler.v1;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -23,7 +25,9 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When
-        SequentialCrawler crawler = new SequentialCrawler.Builder().build();
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.SEQUENTIAL)
+            .build();
 
         // Then
         assertThat(crawler).isNotNull();
@@ -35,7 +39,8 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When
-        SequentialCrawler crawler = new SequentialCrawler.Builder()
+        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.SEQUENTIAL)
             .maxDepth(3)
             .maxPages(100)
             .timeout(10000)
@@ -53,7 +58,7 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxDepth(-1))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL).maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -63,10 +68,10 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxPages(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL).maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().maxPages(-10))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL).maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -76,10 +81,10 @@ class SequentialCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().timeout(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL).timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new SequentialCrawler.Builder().timeout(-5000))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL).timeout(-5000))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

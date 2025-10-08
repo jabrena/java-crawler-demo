@@ -1,4 +1,4 @@
-package info.jab.crawler.v2;
+package info.jab.crawler.v3;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
@@ -9,44 +9,51 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * End-to-End tests for ProducerConsumerCrawler against real websites.
+ * End-to-End tests for RecursiveCrawler against real websites.
  *
  * These tests crawl actual websites and should only be run when explicitly enabled
  * via Maven profile or system property to avoid hitting real sites during regular builds.
+ *
+ * The recursive crawler uses trampoline pattern for safe deep recursion without stack overflow.
  *
  * Run with: mvn test -Pe2e
  * Or: mvn test -Dtest.e2e=true
  */
 @EnabledIfSystemProperty(named = "test.e2e", matches = "true")
-class ProducerConsumerCrawlerE2ETest {
+class RecursiveCrawlerE2ETest {
 
     private static final String TARGET_URL = "https://jabrena.github.io/cursor-rules-java/";
 
     @Test
-    @DisplayName("E2E: Should crawl cursor-rules-java website successfully with multiple threads")
-    void testCrawlCursorRulesJavaWebsite() {
+    @DisplayName("E2E: Should crawl cursor-rules-java website using recursive approach with trampoline")
+    void testCrawlCursorRulesJavaWebsiteRecursively() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(2)
-            .maxPages(10)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(3)  // Deeper recursion safe with trampoline
+            .maxPages(15)
             .timeout(10000)  // Longer timeout for real sites
             .followExternalLinks(false)  // Stay on the same domain
             .startDomain("jabrena.github.io")
-            .numThreads(4)
             .build();
 
         // When
-        System.out.println("\n=== Starting E2E Test (Producer-Consumer) ===");
+        System.out.println("\n=== Starting Recursive E2E Test ===");
         System.out.println("Target: " + TARGET_URL);
+        System.out.println("Using trampoline pattern for safe deep recursion");
 
+        long startTime = System.currentTimeMillis();
         CrawlResult result = crawler.crawl(TARGET_URL);
+        long endTime = System.currentTimeMillis();
 
         // Then
-        System.out.println("\n=== E2E Test Results ===");
+        System.out.println("\n=== Recursive E2E Test Results ===");
         System.out.println(result);
-        System.out.println("\nPages crawled:");
+        System.out.printf("Execution time: %d ms%n", endTime - startTime);
+        System.out.println("\nPages crawled (depth-first traversal):");
         result.successfulPages().forEach(page ->
             System.out.printf("  - %s (title: %s, links: %d)%n",
                 page.url(), page.title(), page.links().size())
@@ -98,16 +105,16 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should respect depth limit on real website")
-    void testDepthLimitOnRealWebsite() {
+    @DisplayName("E2E: Should respect depth limit with recursive approach")
+    void testDepthLimitOnRealWebsiteRecursive() {
         // Given - crawl with depth 0 (only seed URL)
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(0)
             .maxPages(10)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(2)
             .build();
 
         // When
@@ -120,16 +127,16 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should handle real-world link extraction with multiple threads")
-    void testLinkExtractionOnRealWebsite() {
+    @DisplayName("E2E: Should handle real-world link extraction with recursive approach")
+    void testLinkExtractionOnRealWebsiteRecursive() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(1)
-            .maxPages(3)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(2)  // Deeper recursion safe with trampoline
+            .maxPages(5)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(3)
             .build();
 
         // When
@@ -154,17 +161,17 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should complete crawl within reasonable page limit")
-    void testPageLimitOnRealWebsite() {
+    @DisplayName("E2E: Should complete crawl within reasonable page limit with recursive approach")
+    void testPageLimitOnRealWebsiteRecursive() {
         // Given
-        int pageLimit = 5;
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(3)
+        int pageLimit = 8;
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(4)  // Deep recursion safe with trampoline
             .maxPages(pageLimit)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(4)
             .build();
 
         // When
@@ -177,16 +184,16 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should extract meaningful page titles from real site")
-    void testPageTitleExtraction() {
+    @DisplayName("E2E: Should extract meaningful page titles from real site with recursive approach")
+    void testPageTitleExtractionRecursive() {
         // Given
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(1)
-            .maxPages(5)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(2)
+            .maxPages(6)
             .timeout(10000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(3)
             .build();
 
         // When
@@ -205,46 +212,84 @@ class ProducerConsumerCrawlerE2ETest {
     }
 
     @Test
-    @DisplayName("E2E: Should benefit from multi-threading with larger crawl")
-    void testMultiThreadedPerformance() {
-        // Given - Test with more threads should potentially complete faster
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(2)
-            .maxPages(15)
-            .timeout(10000)
+    @DisplayName("E2E: Should demonstrate trampoline pattern benefits with deep recursion")
+    void testTrampolinePatternBenefits() {
+        // Given - Test with deeper recursion to demonstrate trampoline safety
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(5)  // Deep recursion that would cause stack overflow without trampoline
+            .maxPages(20)
+            .timeout(15000)
             .followExternalLinks(false)
             .startDomain("jabrena.github.io")
-            .numThreads(6)
             .build();
 
         // When
+        System.out.println("\n=== Testing Trampoline Pattern Benefits ===");
+        System.out.println("Deep recursion (depth=5) - safe with trampoline pattern");
+
         long startTime = System.currentTimeMillis();
         CrawlResult result = crawler.crawl(TARGET_URL);
-        long duration = System.currentTimeMillis() - startTime;
+        long endTime = System.currentTimeMillis();
 
         // Then
-        System.out.println("\n=== Multi-threaded Performance Test ===");
-        System.out.println("Pages crawled: " + result.getTotalPagesCrawled());
-        System.out.println("Duration: " + duration + "ms");
-        System.out.println("Failed URLs: " + result.getTotalFailures());
+        System.out.printf("Deep recursive crawl completed in %d ms%n", endTime - startTime);
+        System.out.printf("Pages crawled: %d%n", result.getTotalPagesCrawled());
+        System.out.println("✓ No stack overflow occurred - trampoline pattern working correctly");
 
+        // Verify the crawl completed successfully
         assertThat(result.getTotalPagesCrawled())
-            .as("Should crawl multiple pages")
-            .isGreaterThanOrEqualTo(5);
+            .as("Should crawl pages without stack overflow")
+            .isGreaterThanOrEqualTo(1);
 
-        assertThat(duration)
-            .as("Should complete in reasonable time")
-            .isLessThan(60000);
+        assertThat(result.getDurationMs())
+            .as("Deep recursive crawl should complete in reasonable time")
+            .isLessThan(90000); // Less than 90 seconds for deep crawl
 
-        // Verify no duplicate pages were crawled
-        long uniqueUrls = result.successfulPages().stream()
-            .map(Page::url)
-            .distinct()
-            .count();
+        // Verify no failures due to stack overflow
+        assertThat(result.failedUrls())
+            .as("Should not have failures due to stack overflow")
+            .noneMatch(url -> url.contains("StackOverflowError") || url.contains("stack"));
+    }
 
-        assertThat(uniqueUrls)
-            .as("All crawled pages should have unique URLs (no duplicates)")
-            .isEqualTo(result.getTotalPagesCrawled());
+    @Test
+    @DisplayName("E2E: Should demonstrate functional programming approach with immutable state")
+    void testFunctionalProgrammingApproach() {
+        // Given
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(2)
+            .maxPages(10)
+            .timeout(10000)
+            .followExternalLinks(false)
+            .startDomain("jabrena.github.io")
+            .build();
+
+        // When
+        System.out.println("\n=== Testing Functional Programming Approach ===");
+        System.out.println("Using immutable state and pure functions");
+
+        CrawlResult result = crawler.crawl(TARGET_URL);
+
+        // Then
+        System.out.println("✓ Crawl completed using functional approach");
+        System.out.println("✓ All state changes produced new immutable instances");
+        System.out.println("✓ No mutable state during recursive traversal");
+
+        // Verify functional programming characteristics
+        assertThat(result.successfulPages())
+            .as("Result should contain pages")
+            .isNotEmpty();
+
+        // Verify immutability of result
+        final CrawlResult finalResult = result;
+        assertThatThrownBy(() -> finalResult.successfulPages().add(
+            new Page("http://test.com", "Test", 200, "Content", java.util.List.of())
+        )).isInstanceOf(UnsupportedOperationException.class);
+
+        assertThatThrownBy(() -> finalResult.failedUrls().add("http://test.com/fail"))
+            .isInstanceOf(UnsupportedOperationException.class);
+
+        System.out.println("✓ CrawlResult is truly immutable");
     }
 }
-

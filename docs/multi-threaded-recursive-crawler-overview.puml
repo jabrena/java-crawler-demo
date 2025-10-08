@@ -1,0 +1,141 @@
+@startuml multi-threaded-recursive-crawler-overview
+!theme plain
+title Multi-threaded Recursive Crawler (V4) - High-Level Overview
+
+actor "Client" as Client
+participant "MultiThreadedRecursiveCrawler" as Crawler
+participant "Thread Pool" as Pool
+participant "Worker Thread 1" as Worker1
+participant "Worker Thread 2" as Worker2
+participant "Worker Thread N" as WorkerN
+participant "Trampoline" as Trampoline
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.crawlerType(MULTI_THREADED_RECURSIVE)\n.maxDepth(2)\n.maxPages(100)\n.numThreads(4)\n.build()
+activate Crawler
+Crawler -> Pool: Create thread pool (4 workers)
+activate Pool
+
+== Multi-threaded Recursive Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+Crawler -> Pool: Submit initial URL task
+
+par Parallel Processing
+Pool -> Worker1: Process URL task
+activate Worker1
+Worker1 -> Trampoline: processUrl(url, depth)
+activate Trampoline
+
+Trampoline -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Trampoline: HTML Document
+deactivate Jsoup
+
+Trampoline -> Trampoline: Extract title, content, links
+Trampoline -> Result: Add successful page (thread-safe)
+activate Result
+Result --> Trampoline: Updated result
+deactivate Result
+
+Trampoline -> Trampoline: Create recursive tasks\nfor discovered links
+Trampoline -> Pool: Submit new URL tasks
+Trampoline --> Worker1: Continue/Done
+deactivate Trampoline
+Worker1 --> Pool: Task completed
+deactivate Worker1
+
+else
+Pool -> Worker2: Process URL task
+activate Worker2
+Worker2 -> Trampoline: processUrl(url, depth)
+activate Trampoline
+
+Trampoline -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Trampoline: HTML Document
+deactivate Jsoup
+
+Trampoline -> Trampoline: Extract title, content, links
+Trampoline -> Result: Add successful page (thread-safe)
+activate Result
+Result --> Trampoline: Updated result
+deactivate Result
+
+Trampoline -> Trampoline: Create recursive tasks\nfor discovered links
+Trampoline -> Pool: Submit new URL tasks
+Trampoline --> Worker2: Continue/Done
+deactivate Trampoline
+Worker2 --> Pool: Task completed
+deactivate Worker2
+
+else
+Pool -> WorkerN: Process URL task
+activate WorkerN
+WorkerN -> Trampoline: processUrl(url, depth)
+activate Trampoline
+
+Trampoline -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Trampoline: HTML Document
+deactivate Jsoup
+
+Trampoline -> Trampoline: Extract title, content, links
+Trampoline -> Result: Add successful page (thread-safe)
+activate Result
+Result --> Trampoline: Updated result
+deactivate Result
+
+Trampoline -> Trampoline: Create recursive tasks\nfor discovered links
+Trampoline -> Pool: Submit new URL tasks
+Trampoline --> WorkerN: Continue/Done
+deactivate Trampoline
+WorkerN --> Pool: Task completed
+deactivate WorkerN
+end
+
+Pool --> Crawler: All tasks completed
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+deactivate Pool
+
+note right of Result
+  Thread-safe CrawlResult:
+  - Concurrent collections
+  - Atomic operations
+  - Synchronized access
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Trampoline
+  Trampoline Pattern:
+  - Stack-safe deep recursion
+  - Functional programming approach
+  - Prevents stack overflow
+  - Works with multi-threading
+  - Elegant recursive design
+end note
+
+note left of Pool
+  Thread Pool Coordination:
+  - Multiple worker threads
+  - Parallel task execution
+  - Thread-safe task queue
+  - Coordinated shutdown
+  - Optimal resource utilization
+end note
+
+note left of Crawler
+  V4 Multi-threaded Recursive:
+  - Combines parallel performance
+  - Stack-safe recursion
+  - Thread-safe coordination
+  - Breadth-first traversal
+  - Optimal for large-scale crawling
+end note
+
+@enduml

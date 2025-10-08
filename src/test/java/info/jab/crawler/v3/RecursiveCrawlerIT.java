@@ -1,4 +1,4 @@
-package info.jab.crawler.v1;
+package info.jab.crawler.v3;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
@@ -22,14 +22,17 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for SequentialCrawler using WireMock to simulate a real website.
+ * Integration tests for RecursiveCrawler using WireMock to simulate a real website.
  *
  * This test simulates a small 3-page website:
  * - /index.html (links to /about and /contact)
  * - /about.html (links to /contact)
  * - /contact.html (no outgoing links)
+ *
+ * The recursive crawler uses depth-first traversal with trampoline pattern
+ * to safely handle deep recursion without stack overflow.
  */
-class SequentialCrawlerIT {
+class RecursiveCrawlerIT {
 
     private WireMockServer wireMockServer;
     private String baseUrl;
@@ -82,10 +85,11 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should crawl all 3 pages starting from index")
-    void testCrawlAllPages() {
+    @DisplayName("Should crawl all 3 pages using recursive approach with trampoline")
+    void testCrawlAllPagesRecursively() {
         // Given
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -130,10 +134,11 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should respect maxPages limit")
-    void testMaxPagesLimit() {
+    @DisplayName("Should respect maxPages limit with recursive approach")
+    void testMaxPagesLimitRecursive() {
         // Given
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(2)
             .maxPages(2)  // Limit to 2 pages
             .timeout(5000)
@@ -148,10 +153,11 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should respect maxDepth limit")
-    void testMaxDepthLimit() {
+    @DisplayName("Should respect maxDepth limit with recursive approach")
+    void testMaxDepthLimitRecursive() {
         // Given
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(0)  // Only crawl the seed URL
             .maxPages(10)
             .timeout(5000)
@@ -168,10 +174,40 @@ class SequentialCrawlerIT {
     }
 
     @Test
+    @DisplayName("Should handle deep recursion safely with trampoline")
+    void testDeepRecursionSafety() {
+        // Given - Create a deeper website structure
+        setupDeepWebsite();
+
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(5)  // Deep recursion - safe with trampoline
+            .maxPages(20)
+            .timeout(5000)
+            .followExternalLinks(true)
+            .build();
+
+        // When
+        CrawlResult result = crawler.crawl(baseUrl + "/level1.html");
+
+        // Then
+        assertThat(result.getTotalPagesCrawled()).isEqualTo(6); // level1 through level6
+        assertThat(result.getTotalFailures()).isEqualTo(0);
+
+        // Verify all levels were crawled
+        for (int i = 1; i <= 6; i++) {
+            assertThat(result.successfulPages())
+                .extracting(Page::url)
+                .contains(baseUrl + "/level" + i + ".html");
+        }
+    }
+
+    @Test
     @DisplayName("Should extract correct number of links from each page")
-    void testLinkExtraction() {
+    void testLinkExtractionRecursive() {
         // Given
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(2)
             .maxPages(10)
             .timeout(5000)
@@ -202,8 +238,8 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should handle 404 errors gracefully")
-    void testHandles404Errors() {
+    @DisplayName("Should handle 404 errors gracefully with recursive approach")
+    void testHandles404ErrorsRecursive() {
         // Given - add a broken link to index page
         stubFor(get(urlEqualTo("/index-with-404.html"))
             .willReturn(aResponse()
@@ -215,7 +251,8 @@ class SequentialCrawlerIT {
         stubFor(get(urlEqualTo("/broken.html"))
             .willReturn(aResponse().withStatus(404)));
 
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -232,8 +269,8 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should avoid duplicate crawling of same URL")
-    void testAvoidsDuplicates() {
+    @DisplayName("Should avoid duplicate crawling of same URL with recursive approach")
+    void testAvoidsDuplicatesRecursive() {
         // Given - Create a page with duplicate links
         stubFor(get(urlEqualTo("/duplicates.html"))
             .willReturn(aResponse()
@@ -248,7 +285,8 @@ class SequentialCrawlerIT {
                 .withHeader("Content-Type", "text/html")
                 .withBodyFile("target.html")));
 
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(1)
             .maxPages(10)
             .timeout(5000)
@@ -266,10 +304,11 @@ class SequentialCrawlerIT {
     }
 
     @Test
-    @DisplayName("Should extract page content correctly")
-    void testContentExtraction() {
+    @DisplayName("Should extract page content correctly with recursive approach")
+    void testContentExtractionRecursive() {
         // Given
-        SequentialCrawler crawler = (SequentialCrawler) new DefaultCrawlerBuilder().crawlerType(CrawlerType.SEQUENTIAL)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .maxDepth(0)
             .maxPages(1)
             .timeout(5000)
@@ -285,5 +324,30 @@ class SequentialCrawlerIT {
             .contains("Welcome to Test Site")
             .contains("This is the home page");
     }
-}
 
+    /**
+     * Sets up a deeper website structure for testing deep recursion safety.
+     */
+    private void setupDeepWebsite() {
+        // Create 6 levels of pages, each linking to the next
+        for (int i = 1; i <= 6; i++) {
+            String currentLevel = "/level" + i + ".html";
+            String nextLevel = i < 6 ? "/level" + (i + 1) + ".html" : "";
+
+            String htmlContent = String.format(
+                "<html><head><title>Level %d Page</title></head><body>" +
+                "<h1>Level %d</h1>" +
+                "<p>This is level %d of the deep website.</p>" +
+                (i < 6 ? "<a href=\"%s\">Go to Level %d</a>" : "") +
+                "</body></html>",
+                i, i, i, nextLevel, i + 1
+            );
+
+            stubFor(get(urlEqualTo(currentLevel))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/html")
+                    .withBody(htmlContent)));
+        }
+    }
+}

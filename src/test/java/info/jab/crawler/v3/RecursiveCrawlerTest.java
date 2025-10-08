@@ -1,9 +1,10 @@
-package info.jab.crawler.v2;
+package info.jab.crawler.v3;
 
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.DefaultCrawlerBuilder;
 import info.jab.crawler.commons.CrawlerType;
+import info.jab.crawler.commons.Trampoline;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -11,22 +12,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for ProducerConsumerCrawler using mocked scenarios.
+ * Unit tests for RecursiveCrawler using mocked scenarios.
  *
  * Note: Since JSOUP's Jsoup.connect() is a static method that's hard to mock,
  * these tests focus on testing the crawler's configuration and domain models.
  * For full integration testing with mocked HTTP responses, see the WireMock tests.
  */
-class ProducerConsumerCrawlerTest {
+class RecursiveCrawlerTest {
 
     @Test
-    @DisplayName("Builder should create crawler with default values")
+    @DisplayName("Builder should create recursive crawler with default values")
     void testBuilderDefaults() {
         // Given - no setup needed
 
         // When
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.PRODUCER_CONSUMER)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
             .build();
 
         // Then
@@ -34,19 +35,18 @@ class ProducerConsumerCrawlerTest {
     }
 
     @Test
-    @DisplayName("Builder should accept custom configuration")
+    @DisplayName("Builder should accept custom configuration for recursive crawler")
     void testBuilderCustomConfiguration() {
         // Given - no setup needed
 
         // When
-        ProducerConsumerCrawler crawler = (ProducerConsumerCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.PRODUCER_CONSUMER)
-            .maxDepth(3)
-            .maxPages(100)
-            .timeout(10000)
+        RecursiveCrawler crawler = (RecursiveCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.RECURSIVE)
+            .maxDepth(5)  // Deep recursion safe with trampoline
+            .maxPages(200)
+            .timeout(15000)
             .followExternalLinks(true)
             .startDomain("example.com")
-            .numThreads(8)
             .build();
 
         // Then
@@ -59,7 +59,7 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxDepth(-1))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.RECURSIVE).maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -69,10 +69,10 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxPages(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.RECURSIVE).maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).maxPages(-10))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.RECURSIVE).maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -82,24 +82,72 @@ class ProducerConsumerCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).timeout(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.RECURSIVE).timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).timeout(-5000))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.RECURSIVE).timeout(-5000))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    @DisplayName("Builder should reject zero or negative numThreads")
-    void testBuilderRejectsInvalidNumThreads() {
-        // Given - no setup needed
+    @DisplayName("Trampoline should handle simple completion")
+    void testTrampolineSimpleCompletion() {
+        // Given
+        Trampoline<String> trampoline = Trampoline.done("Hello World");
+
+        // When
+        String result = trampoline.run();
+
+        // Then
+        assertThat(result).isEqualTo("Hello World");
+    }
+
+    @Test
+    @DisplayName("Trampoline should handle continuation")
+    void testTrampolineContinuation() {
+        // Given
+        Trampoline<Integer> trampoline = Trampoline.more(() ->
+            Trampoline.more(() ->
+                Trampoline.done(42)
+            )
+        );
+
+        // When
+        Integer result = trampoline.run();
+
+        // Then
+        assertThat(result).isEqualTo(42);
+    }
+
+    @Test
+    @DisplayName("Trampoline should handle deep recursion safely")
+    void testTrampolineDeepRecursion() {
+        // Given - create a deep recursive trampoline
+        Trampoline<Integer> deepTrampoline = createDeepTrampoline(1000);
+
+        // When
+        Integer result = deepTrampoline.run();
+
+        // Then
+        assertThat(result).isEqualTo(1000);
+    }
+
+    @Test
+    @DisplayName("Trampoline should respect step limit")
+    void testTrampolineStepLimit() {
+        // Given
+        Trampoline<Integer> infiniteTrampoline = Trampoline.more(() ->
+            Trampoline.more(() ->
+                Trampoline.more(() ->
+                    Trampoline.done(42)
+                )
+            )
+        );
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).numThreads(0))
-            .isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.PRODUCER_CONSUMER).numThreads(-4))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> infiniteTrampoline.runWithLimit(2))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("exceeded maximum steps");
     }
 
     @Test
@@ -212,5 +260,18 @@ class ProducerConsumerCrawlerTest {
             .contains("failed=1")
             .contains("duration=");
     }
-}
 
+    /**
+     * Helper method to create a deep recursive trampoline for testing.
+     */
+    private Trampoline<Integer> createDeepTrampoline(int depth) {
+        if (depth <= 0) {
+            return Trampoline.done(0);
+        }
+
+        return Trampoline.more(() -> {
+            Trampoline<Integer> next = createDeepTrampoline(depth - 1);
+            return next.run() == depth - 1 ? Trampoline.done(depth) : next;
+        });
+    }
+}

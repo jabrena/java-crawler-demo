@@ -3,18 +3,22 @@ package info.jab.crawler.v2;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import info.jab.crawler.commons.CrawlerType;
 
 /**
  * Example demonstrating how to use the ProducerConsumerCrawler to crawl a website.
  *
  * This example crawls the cursor-rules-java website and demonstrates:
- * - Creating a multi-threaded crawler with custom configuration
+ * - Creating a multi-threaded crawler using the external DefaultCrawlerBuilder
+ * - Using CrawlerType enum to select the producer-consumer implementation
+ * - Configuring thread count for parallel processing
  * - Starting a crawl from a seed URL
  * - Processing the crawl results
  * - Accessing page information
  *
  * To run this example:
- *   mvn compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v2.ProducerConsumerCrawlerExample"
+ *   mvn compile exec:java -Dexec.mainClass="info.jab.crawler.v2.ProducerConsumerCrawlerExample"
  */
 public class ProducerConsumerCrawlerExample {
 
@@ -26,9 +30,10 @@ public class ProducerConsumerCrawlerExample {
 
         // Step 1: Configure and build the crawler
         System.out.println("Step 1: Configuring the multi-threaded crawler...");
-        Crawler crawler = new ProducerConsumerCrawler.Builder()
+        Crawler crawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.PRODUCER_CONSUMER) // Use producer-consumer crawler
             .maxDepth(2)                        // Crawl up to 2 levels deep
-            .maxPages(100)                       // Limit to 10 pages maximum
+            .maxPages(100)                       // Limit to 100 pages maximum
             .timeout(10000)                     // 10 second timeout per page
             .numThreads(4)                      // Use 4 worker threads
             .followExternalLinks(false)         // Stay within the same domain

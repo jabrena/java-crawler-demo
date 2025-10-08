@@ -1,9 +1,9 @@
-package info.jab.crawler.v2;
+package info.jab.crawler.v4;
 
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import info.jab.crawler.commons.CrawlerBuilder;
+import info.jab.crawler.commons.Trampoline;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -11,27 +11,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A multi-threaded web crawler using the Producer-Consumer pattern.
+ * A multi-threaded recursive web crawler using a hybrid approach.
  *
  * Design characteristics:
- * - Multi-threaded execution using ExecutorService
- * - Producer-Consumer pattern with BlockingQueue for URL frontier
- * - Thread-safe data structures (ConcurrentHashMap, AtomicInteger)
- * - Parallel page fetching and processing
+ * - Multi-threaded execution using ExecutorService for parallel processing
+ * - Recursive-style design with thread-safe coordination
+ * - Breadth-first traversal with parallel URL processing
  * - Maintains a visited set to avoid duplicates across threads
  * - Respects maximum depth and page limits
+ * - Uses BlockingQueue for thread coordination (like V2) with recursive-style processing
  */
-public class ProducerConsumerCrawler implements Crawler {
+public class MultiThreadedRecursiveCrawler implements Crawler {
 
     private final int maxDepth;
     private final int maxPages;
@@ -40,7 +34,7 @@ public class ProducerConsumerCrawler implements Crawler {
     private final String startDomain;
     private final int numThreads;
 
-    public ProducerConsumerCrawler(int maxDepth, int maxPages, int timeoutMs, boolean followExternalLinks, String startDomain, int numThreads) {
+    public MultiThreadedRecursiveCrawler(int maxDepth, int maxPages, int timeoutMs, boolean followExternalLinks, String startDomain, int numThreads) {
         this.maxDepth = maxDepth;
         this.maxPages = maxPages;
         this.timeoutMs = timeoutMs;
@@ -50,28 +44,37 @@ public class ProducerConsumerCrawler implements Crawler {
     }
 
     /**
-     * Crawls the web starting from the given seed URL using multiple threads.
+     * Crawls the web starting from the given seed URL using multi-threaded approach.
      *
      * @param seedUrl the starting URL for the crawl
      * @return CrawlResult containing all crawled pages and statistics
      */
     @Override
     public CrawlResult crawl(String seedUrl) {
-        // Thread-safe collections
+        // Thread-safe collections for coordination
         BlockingQueue<UrlDepthPair> urlQueue = new LinkedBlockingQueue<>();
-        Set<String> visitedUrls = ConcurrentHashMap.newKeySet();
+        ConcurrentHashMap<String, Boolean> visitedUrls = new ConcurrentHashMap<>();
+        AtomicInteger pagesCrawled = new AtomicInteger(0);
         List<Page> successfulPages = Collections.synchronizedList(new ArrayList<>());
         List<String> failedUrls = Collections.synchronizedList(new ArrayList<>());
-        AtomicInteger pagesCrawled = new AtomicInteger(0);
         AtomicInteger activeWorkers = new AtomicInteger(0);
 
         long startTime = System.currentTimeMillis();
 
         // Initialize with seed URL at depth 0
-        urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-        visitedUrls.add(normalizeUrl(seedUrl));
+        if (seedUrl != null && !seedUrl.isEmpty()) {
+            urlQueue.offer(new UrlDepthPair(seedUrl, 0));
+            visitedUrls.put(normalizeUrl(seedUrl), true);
+        } else {
+            // Handle invalid seed URL
+            if (seedUrl != null) {
+                failedUrls.add(seedUrl);
+            } else {
+                failedUrls.add("null");
+            }
+        }
 
-        // Create thread pool
+        // Create thread pool for parallel execution
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         // Create a poison pill to signal shutdown
@@ -119,6 +122,7 @@ public class ProducerConsumerCrawler implements Crawler {
                             Document doc = Jsoup.connect(url)
                                 .timeout(timeoutMs)
                                 .userAgent("Mozilla/5.0 (Educational Crawler)")
+                                .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
                                 .get();
 
                             // Extract information
@@ -146,7 +150,7 @@ public class ProducerConsumerCrawler implements Crawler {
                                     .filter(this::shouldFollowLink)
                                     .filter(link -> {
                                         String normalized = normalizeUrl(link);
-                                        return visitedUrls.add(normalized); // Thread-safe add and check
+                                        return visitedUrls.putIfAbsent(normalized, true) == null; // Thread-safe add and check
                                     })
                                     .forEach(link -> urlQueue.offer(new UrlDepthPair(link, depth + 1)));
                             }
@@ -189,6 +193,7 @@ public class ProducerConsumerCrawler implements Crawler {
             .map(element -> element.absUrl("href"))
             .filter(link -> !link.isEmpty())
             .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
+            .limit(20) // Limit links per page for performance
             .toList();
     }
 
@@ -211,18 +216,24 @@ public class ProducerConsumerCrawler implements Crawler {
      * @return normalized URL
      */
     private String normalizeUrl(String url) {
-        // Remove fragment
-        String normalized = url.split("#")[0];
-        // Remove trailing slash using functional approach
-        return normalized.endsWith("/")
-            ? normalized.substring(0, normalized.length() - 1)
-            : normalized;
+        // Handle null or empty URLs
+        if (url == null || url.isEmpty()) {
+            return url;
+        }
+
+        // More efficient normalization
+        int hashIndex = url.indexOf('#');
+        if (hashIndex != -1) {
+            url = url.substring(0, hashIndex);
+        }
+        if (url.endsWith("/") && url.length() > 1) {
+            url = url.substring(0, url.length() - 1);
+        }
+        return url;
     }
 
     /**
      * Internal record to track URL and its depth in the crawl tree.
      */
     private record UrlDepthPair(String url, int depth) {}
-
 }
-
