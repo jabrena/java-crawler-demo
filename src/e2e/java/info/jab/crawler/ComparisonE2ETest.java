@@ -680,6 +680,7 @@ class ComparisonE2ETest {
             .isLessThanOrEqualTo(
                 crawlerType == CrawlerType.RECURSIVE_ACTOR ? MAX_PAGES * 4 :
                 crawlerType == CrawlerType.STRUCTURAL_CONCURRENCY ? MAX_PAGES * 5 :
+                crawlerType == CrawlerType.HYBRID_ACTOR_STRUCTURAL ? MAX_PAGES * 5 :
                 MAX_PAGES
             ); // Allow margin for concurrent crawlers
 
@@ -804,7 +805,9 @@ class ComparisonE2ETest {
             .as("%s crawler should discover reasonable number of URLs", crawlerType)
             .hasSizeGreaterThanOrEqualTo(5)
             .hasSizeLessThanOrEqualTo(
-                (crawlerType == CrawlerType.RECURSIVE_ACTOR || crawlerType == CrawlerType.STRUCTURAL_CONCURRENCY) ? 50 : 20
+                (crawlerType == CrawlerType.RECURSIVE_ACTOR ||
+                 crawlerType == CrawlerType.STRUCTURAL_CONCURRENCY ||
+                 crawlerType == CrawlerType.HYBRID_ACTOR_STRUCTURAL) ? 50 : 20
             ); // Allow more for concurrent crawlers
 
         assertThat(urls)

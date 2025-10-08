@@ -1,0 +1,108 @@
+@startuml
+!theme plain
+title Hybrid Actor-Structural Concurrency Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "HybridActorStructuralCrawler" as Crawler
+participant "SupervisorActor" as Supervisor
+participant "StructuredTaskScope" as Scope
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.maxConcurrentTasks(10)\n.build()
+activate Crawler
+
+== Hybrid Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+Crawler -> Supervisor: new SupervisorActor(config)
+activate Supervisor
+
+Crawler -> Supervisor: crawlWithStructuralConcurrency(seedUrl, startTime)
+activate Supervisor
+
+== Actor State Management ==
+Supervisor -> Supervisor: Initialize thread-safe collections\n(visitedUrls, results, counters)
+
+== Structural Concurrency Processing ==
+loop For each URL (recursive with scopes)
+Supervisor -> Supervisor: Check termination conditions\n(depth, page limits, visited URLs)
+
+alt URL not visited and within limits
+Supervisor -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Supervisor: HTML Document
+deactivate Jsoup
+
+Supervisor -> Supervisor: Extract title, content, links
+Supervisor -> Supervisor: Update actor state\n(visitedUrls, results, counters)
+
+alt Depth < maxDepth and links found
+Supervisor -> Scope: StructuredTaskScope.open()
+activate Scope
+
+loop For each discovered link
+Supervisor -> Scope: scope.fork(() -> crawlRecursively(link, depth+1))
+activate Scope
+Scope -> Supervisor: crawlWithStructuralConcurrency(link, depth+1)
+note right: Recursive call with new scope
+deactivate Scope
+end
+
+Supervisor -> Scope: scope.join()
+activate Scope
+Scope --> Supervisor: All child tasks completed
+deactivate Scope
+Scope --> Supervisor: Automatic cleanup
+deactivate Scope
+end
+
+else URL already visited or limits reached
+Supervisor -> Supervisor: Skip URL
+end
+
+end
+
+Supervisor -> Result: new CrawlResult(pages, failedUrls, startTime, endTime)
+activate Result
+Result --> Supervisor: Final result
+deactivate Result
+
+Supervisor --> Crawler: CrawlResult
+deactivate Supervisor
+
+Crawler -> Supervisor: shutdown()
+activate Supervisor
+Supervisor --> Crawler: Actor shut down
+deactivate Supervisor
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+  - Performance statistics
+end note
+
+note left of Supervisor
+  Actor State Management:
+  - Thread-safe collections (ConcurrentHashMap, AtomicInteger)
+  - Visited URL tracking
+  - Result aggregation
+  - Fault isolation
+end note
+
+note left of Scope
+  Structural Concurrency:
+  - Automatic resource management
+  - Cancellation propagation
+  - Fault isolation through scopes
+  - Virtual threads for efficiency
+  - Tree-like crawling structure
+end note
+
+@enduml

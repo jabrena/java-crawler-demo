@@ -54,7 +54,15 @@ public enum CrawlerType {
      * Provides automatic cancellation, cleanup, and simplified error handling.
      * Natural tree-like crawling structure with proper resource management through structured scoping.
      */
-    STRUCTURAL_CONCURRENCY;
+    STRUCTURAL_CONCURRENCY,
+
+    /**
+     * Hybrid actor-structural concurrency crawler implementation.
+     * Combines actor model pattern for coordination and state management with structural concurrency for actual crawling work.
+     * Uses supervisor actor for fault tolerance and message-based coordination while leveraging StructuredTaskScope for efficient parallel crawling.
+     * Provides the best of both paradigms: actor-based coordination with automatic resource management.
+     */
+    HYBRID_ACTOR_STRUCTURAL;
 
     /**
      * Creates a new builder instance for the selected crawler type.

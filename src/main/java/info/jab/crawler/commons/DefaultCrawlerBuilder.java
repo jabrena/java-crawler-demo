@@ -135,6 +135,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case STRUCTURAL_CONCURRENCY -> new info.jab.crawler.v7.StructuralConcurrencyCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
             );
+            case HYBRID_ACTOR_STRUCTURAL -> new info.jab.crawler.v8.HybridActorStructuralCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
         };
     }
 }
