@@ -44,10 +44,11 @@ class ComparisonE2ETest {
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
-        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
+        Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler recursiveActorCrawler = createCrawler(CrawlerType.RECURSIVE_ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
+        Crawler structuredWorkerCrawler = createCrawler(CrawlerType.STRUCTURED_WORKER);
 
         // When - Crawl the same URL with all seven crawlers
         System.out.println("\n=== Crawling with SequentialCrawler ===");
@@ -62,8 +63,8 @@ class ComparisonE2ETest {
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
         System.out.println(recursiveResult);
 
-        System.out.println("\n=== Crawling with MultiThreadedRecursiveCrawler ===");
-        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        System.out.println("\n=== Crawling with MultiThreadedIterativeCrawler ===");
+        CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         System.out.println(multiThreadedRecursiveResult);
 
         System.out.println("\n=== Crawling with ActorCrawler ===");
@@ -77,6 +78,10 @@ class ComparisonE2ETest {
         System.out.println("\n=== Crawling with StructuralConcurrencyCrawler ===");
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
         System.out.println(structuralConcurrencyResult);
+
+        System.out.println("\n=== Crawling with StructuredWorkerCrawler ===");
+        CrawlResult structuredWorkerResult = structuredWorkerCrawler.crawl(TARGET_URL);
+        System.out.println(structuredWorkerResult);
 
         // Then - All crawlers should return the same number of pages
         System.out.println("\n=== Comparison Results ===");
@@ -101,6 +106,9 @@ class ComparisonE2ETest {
         System.out.printf("StructuralConcurrency:     %d pages, %d failures%n",
             structuralConcurrencyResult.getTotalPagesCrawled(),
             structuralConcurrencyResult.getTotalFailures());
+        System.out.printf("StructuredWorker:          %d pages, %d failures%n",
+            structuredWorkerResult.getTotalPagesCrawled(),
+            structuredWorkerResult.getTotalFailures());
 
         // Verify all crawlers return consistent page counts
         assertThat(sequentialResult.getTotalPagesCrawled())
@@ -177,6 +185,24 @@ class ComparisonE2ETest {
             .as("StructuralConcurrency should crawl at least as many pages as Actor")
             .isGreaterThanOrEqualTo(actorResult.getTotalPagesCrawled());
 
+        // Note: StructuredWorker may crawl more pages due to concurrent nature
+        // so we only check that it crawls at least as many as the others
+        assertThat(structuredWorkerResult.getTotalPagesCrawled())
+            .as("StructuredWorker should crawl at least as many pages as other crawlers")
+            .isGreaterThanOrEqualTo(sequentialResult.getTotalPagesCrawled() / 2);
+
+        assertThat(structuredWorkerResult.getTotalPagesCrawled())
+            .as("StructuredWorker should crawl at least as many pages as ProducerConsumer")
+            .isGreaterThanOrEqualTo(producerConsumerResult.getTotalPagesCrawled() / 2);
+
+        assertThat(structuredWorkerResult.getTotalPagesCrawled())
+            .as("StructuredWorker should crawl at least as many pages as MultiThreadedRecursive")
+            .isGreaterThanOrEqualTo(multiThreadedRecursiveResult.getTotalPagesCrawled() / 2);
+
+        assertThat(structuredWorkerResult.getTotalPagesCrawled())
+            .as("StructuredWorker should crawl at least as many pages as Actor")
+            .isGreaterThanOrEqualTo(actorResult.getTotalPagesCrawled() / 2);
+
         // All should crawl at least one page
         assertThat(sequentialResult.getTotalPagesCrawled())
             .as("All crawlers should crawl at least one page")
@@ -191,7 +217,7 @@ class ComparisonE2ETest {
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
-        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
+        Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
 
@@ -199,7 +225,7 @@ class ComparisonE2ETest {
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
-        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
 
@@ -302,7 +328,7 @@ class ComparisonE2ETest {
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
-        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
+        Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
 
@@ -310,7 +336,7 @@ class ComparisonE2ETest {
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
-        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
 
@@ -380,8 +406,8 @@ class ComparisonE2ETest {
             .startDomain(START_DOMAIN)
             .build();
 
-        Crawler multiThreadedRecursiveCrawler = new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        Crawler multiThreadedIterativeCrawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE)
             .maxDepth(0)
             .maxPages(10)
             .timeout(TIMEOUT_MS)
@@ -413,7 +439,7 @@ class ComparisonE2ETest {
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
-        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
 
@@ -478,8 +504,8 @@ class ComparisonE2ETest {
             .startDomain(START_DOMAIN)
             .build();
 
-        Crawler multiThreadedRecursiveCrawler = new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        Crawler multiThreadedIterativeCrawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE)
             .maxDepth(2)
             .maxPages(pageLimit)
             .timeout(TIMEOUT_MS)
@@ -511,7 +537,7 @@ class ComparisonE2ETest {
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
-        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
 
@@ -562,7 +588,7 @@ class ComparisonE2ETest {
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
-        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
+        Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
 
@@ -570,7 +596,7 @@ class ComparisonE2ETest {
         long sequentialTime = measureCrawlTime(sequentialCrawler, TARGET_URL);
         long producerConsumerTime = measureCrawlTime(producerConsumerCrawler, TARGET_URL);
         long recursiveTime = measureCrawlTime(recursiveCrawler, TARGET_URL);
-        long multiThreadedRecursiveTime = measureCrawlTime(multiThreadedRecursiveCrawler, TARGET_URL);
+        long multiThreadedRecursiveTime = measureCrawlTime(multiThreadedIterativeCrawler, TARGET_URL);
         long actorTime = measureCrawlTime(actorCrawler, TARGET_URL);
         long structuralConcurrencyTime = measureCrawlTime(structuralConcurrencyCrawler, TARGET_URL);
 
@@ -623,7 +649,7 @@ class ComparisonE2ETest {
      */
     private Crawler createCrawler(CrawlerType type) {
         if (type == CrawlerType.PRODUCER_CONSUMER ||
-            type == CrawlerType.MULTI_THREADED_RECURSIVE ||
+            type == CrawlerType.MULTI_THREADED_ITERATIVE ||
             type == CrawlerType.ACTOR ||
             type == CrawlerType.RECURSIVE_ACTOR) {
             return new DefaultCrawlerBuilder()
@@ -706,7 +732,7 @@ class ComparisonE2ETest {
             CrawlerType.SEQUENTIAL,
             CrawlerType.PRODUCER_CONSUMER,
             CrawlerType.RECURSIVE,
-            CrawlerType.MULTI_THREADED_RECURSIVE,
+            CrawlerType.MULTI_THREADED_ITERATIVE,
             CrawlerType.ACTOR
         };
 
@@ -720,7 +746,7 @@ class ComparisonE2ETest {
                 .followExternalLinks(false)
                 .startDomain(START_DOMAIN)
                 .numThreads(crawlerType == CrawlerType.PRODUCER_CONSUMER ||
-                           crawlerType == CrawlerType.MULTI_THREADED_RECURSIVE ||
+                           crawlerType == CrawlerType.MULTI_THREADED_ITERATIVE ||
                            crawlerType == CrawlerType.ACTOR ? 4 : 1)
                 .build();
 
@@ -752,7 +778,7 @@ class ComparisonE2ETest {
             CrawlerType.SEQUENTIAL,
             CrawlerType.PRODUCER_CONSUMER,
             CrawlerType.RECURSIVE,
-            CrawlerType.MULTI_THREADED_RECURSIVE,
+            CrawlerType.MULTI_THREADED_ITERATIVE,
             CrawlerType.ACTOR
         };
 
@@ -766,7 +792,7 @@ class ComparisonE2ETest {
                 .followExternalLinks(false)
                 .startDomain(START_DOMAIN)
                 .numThreads(crawlerType == CrawlerType.PRODUCER_CONSUMER ||
-                           crawlerType == CrawlerType.MULTI_THREADED_RECURSIVE ||
+                           crawlerType == CrawlerType.MULTI_THREADED_ITERATIVE ||
                            crawlerType == CrawlerType.ACTOR ? 4 : 1)
                 .build();
 

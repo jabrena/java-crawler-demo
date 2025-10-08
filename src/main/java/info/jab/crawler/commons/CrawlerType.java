@@ -27,11 +27,11 @@ public enum CrawlerType {
     RECURSIVE,
 
     /**
-     * Multi-threaded recursive crawler implementation.
-     * Combines multi-threading with recursive design using trampoline pattern.
-     * Provides parallel performance with stack-safe deep recursion.
+     * Multi-threaded iterative crawler implementation.
+     * Uses producer-consumer pattern with multiple worker threads for parallel processing.
+     * Provides high performance through concurrent execution without recursion or trampoline.
      */
-    MULTI_THREADED_RECURSIVE,
+    MULTI_THREADED_ITERATIVE,
 
     /**
      * Actor model crawler implementation.
@@ -62,7 +62,16 @@ public enum CrawlerType {
      * Uses supervisor actor for fault tolerance and message-based coordination while leveraging StructuredTaskScope for efficient parallel crawling.
      * Provides the best of both paradigms: actor-based coordination with automatic resource management.
      */
-    HYBRID_ACTOR_STRUCTURAL;
+    HYBRID_ACTOR_STRUCTURAL,
+
+    /**
+     * Structured worker crawler implementation.
+     * Combines BlockingQueue + worker pattern with StructuredTaskScope.
+     * Uses structured concurrency for worker management with queue-based coordination.
+     * Provides automatic resource cleanup, better error handling, and virtual threads
+     * while maintaining the proven producer-consumer pattern from v4.
+     */
+    STRUCTURED_WORKER;
 
     /**
      * Creates a new builder instance for the selected crawler type.

@@ -14,17 +14,18 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A multi-threaded recursive web crawler using a hybrid approach.
+ * A multi-threaded iterative web crawler using producer-consumer pattern.
  *
  * Design characteristics:
  * - Multi-threaded execution using ExecutorService for parallel processing
- * - Recursive-style design with thread-safe coordination
+ * - Iterative approach with thread-safe coordination using BlockingQueue
  * - Breadth-first traversal with parallel URL processing
  * - Maintains a visited set to avoid duplicates across threads
  * - Respects maximum depth and page limits
- * - Uses BlockingQueue for thread coordination (like V2) with recursive-style processing
+ * - Uses producer-consumer pattern with worker threads (similar to V2)
+ * - No recursion or trampoline pattern - uses iterative while loops
  */
-public class MultiThreadedRecursiveCrawler implements Crawler {
+public class MultiThreadedIterativeCrawler implements Crawler {
 
     private final int maxDepth;
     private final int maxPages;
@@ -33,7 +34,7 @@ public class MultiThreadedRecursiveCrawler implements Crawler {
     private final String startDomain;
     private final int numThreads;
 
-    public MultiThreadedRecursiveCrawler(int maxDepth, int maxPages, int timeoutMs, boolean followExternalLinks, String startDomain, int numThreads) {
+    public MultiThreadedIterativeCrawler(int maxDepth, int maxPages, int timeoutMs, boolean followExternalLinks, String startDomain, int numThreads) {
         this.maxDepth = maxDepth;
         this.maxPages = maxPages;
         this.timeoutMs = timeoutMs;
@@ -43,7 +44,7 @@ public class MultiThreadedRecursiveCrawler implements Crawler {
     }
 
     /**
-     * Crawls the web starting from the given seed URL using multi-threaded approach.
+     * Crawls the web starting from the given seed URL using multi-threaded iterative approach.
      *
      * @param seedUrl the starting URL for the crawl
      * @return CrawlResult containing all crawled pages and statistics

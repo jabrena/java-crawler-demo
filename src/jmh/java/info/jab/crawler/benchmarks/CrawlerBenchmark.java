@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * 1. Sequential Crawler (v1)
  * 2. Producer-Consumer Crawler (v2)
  * 3. Recursive Crawler (v3)
- * 4. Multi-threaded Recursive Crawler (v4)
+ * 4. Multi-threaded Iterative Crawler (v4)
  * 5. Actor Crawler (v5)
  * 6. Recursive Actor Crawler (v6)
  * 7. Structural Concurrency Crawler (v7)
@@ -95,8 +95,8 @@ public class CrawlerBenchmark {
     }
 
     @Benchmark
-    public CrawlResult benchmarkMultiThreadedRecursiveCrawler() {
-        Crawler crawler = CrawlerType.MULTI_THREADED_RECURSIVE.createWith(builder ->
+    public CrawlResult benchmarkMultiThreadedIterativeCrawler() {
+        Crawler crawler = CrawlerType.MULTI_THREADED_ITERATIVE.createWith(builder ->
             builder.maxDepth(MAX_DEPTH)
                    .maxPages(MAX_PAGES)
                    .timeout(TIMEOUT_MS)
@@ -153,6 +153,18 @@ public class CrawlerBenchmark {
         return crawler.crawl(TEST_URL);
     }
 
+    @Benchmark
+    public CrawlResult benchmarkStructuredWorkerCrawler() {
+        Crawler crawler = CrawlerType.STRUCTURED_WORKER.createWith(builder ->
+            builder.maxDepth(MAX_DEPTH)
+                   .maxPages(MAX_PAGES)
+                   .timeout(TIMEOUT_MS)
+                   .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
+                   .numThreads(NUM_THREADS)
+        );
+        return crawler.crawl(TEST_URL);
+    }
+
     // ============================================================================
     // UTILITY METHODS
     // ============================================================================
@@ -169,10 +181,11 @@ public class CrawlerBenchmark {
 
             // Add thread configuration for multi-threaded crawlers
             if (type == CrawlerType.PRODUCER_CONSUMER ||
-                type == CrawlerType.MULTI_THREADED_RECURSIVE ||
+                type == CrawlerType.MULTI_THREADED_ITERATIVE ||
                 type == CrawlerType.ACTOR ||
                 type == CrawlerType.RECURSIVE_ACTOR ||
-                type == CrawlerType.HYBRID_ACTOR_STRUCTURAL) {
+                type == CrawlerType.HYBRID_ACTOR_STRUCTURAL ||
+                type == CrawlerType.STRUCTURED_WORKER) {
                 builder.numThreads(NUM_THREADS);
             }
         });
