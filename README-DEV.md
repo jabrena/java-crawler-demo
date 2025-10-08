@@ -44,7 +44,7 @@ jwebserver -p 8005 -d "$(pwd)/target/site/"
 java -jar target/jmh-benchmarks.jar -l
 
 # Run all crawler benchmarks and save results to JSON
-java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks.CrawlerBenchmark -rf json -rff src/jmh/test/resources/jmh-crawler-benchmark-results.json
+java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks.CrawlerBenchmark -rf json -rff src/jmh/test/resources/$(date +"%Y%m%d-%H%M")-jmh-results.json
 
 # Note: JMH 1.37 has partial compatibility issues with Java 25 preview features
 # Some benchmarks may fail with "InfraControl" errors when using forked execution
