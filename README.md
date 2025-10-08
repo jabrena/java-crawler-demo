@@ -4,20 +4,20 @@ A web crawler implementations in Java.
 
 ## Comparison Matrix
 
-| Aspect | v1 | v2 | v3 | v4 | v5 | v6 | v7 | v8 |
+| Aspect | v4 | v2 | v5 | v1 | v3 | v7 | v8 | v6 |
 |--------|----|----|----|----|----|----|----|----|
-| **Analysis** | [More](./docs/v1/README.md) | [More](./docs/v2/README.md) | [More](./docs/v3/README.md) | [More](./docs/v4/README.md) | [More](./docs/v5/README.md) | [More](./docs/v6/README.md) | [More](./docs/v7/README.md) | [More](./docs/v8/README.md) |
-| **Implementation** | [SequentialCrawler](./src/main/java/info/jab/crawler/v1/SequentialCrawler.java) | [ProducerConsumerCrawler](./src/main/java/info/jab/crawler/v2/ProducerConsumerCrawler.java) | [RecursiveCrawler](./src/main/java/info/jab/crawler/v3/RecursiveCrawler.java) | [MultiThreadedRecursiveCrawler](./src/main/java/info/jab/crawler/v4/MultiThreadedRecursiveCrawler.java) | [ActorCrawler](./src/main/java/info/jab/crawler/v5/ActorCrawler.java) | [RecursiveActorCrawler](./src/main/java/info/jab/crawler/v6/RecursiveActorCrawler.java) | [StructuralConcurrencyCrawler](./src/main/java/info/jab/crawler/v7/StructuralConcurrencyCrawler.java) | [HybridActorStructuralCrawler](./src/main/java/info/jab/crawler/v8/HybridActorStructuralCrawler.java) |
-| **Threading** | Single-threaded | Multi-threaded (configurable) | Single-threaded | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) |
-| **Throughput** | Low | High | Low | **High** | High | Low | Low | Low |
-| **Performance (JMH)** | 765.22 ms/op | 503.65 ms/op | 816.36 ms/op | **500.26 ms/op** ⭐ | 557.70 ms/op | 1873.83 ms/op ⚠️ | 1570.43 ms/op | 1703.47 ms/op |
-| **Performance Rank** | 4th | 2nd | 5th | **1st** | 3rd | 8th | 6th | 7th |
-| **Complexity** | Simple | Complex | Medium | Very Complex | Very Complex | Very Complex | Medium | Complex |
-| **Order** | Deterministic | Non-deterministic | Deterministic | Non-deterministic | Non-deterministic | Non-deterministic | Non-deterministic | Non-deterministic |
-| **Scalability** | Limited | Scales with cores/threads | Limited | Scales with cores/threads | Scales with actors (distributed) | Scales with actors (dynamic) | Scales with virtual threads | Scales with virtual threads + actors |
-| **Stack Safety** | N/A | N/A | Yes (trampoline) | Yes (trampoline) | N/A | Yes (async recursion) | Yes (structured scopes) | Yes (structured scopes) |
-| **Fault Tolerance** | None | Limited | None | Limited | High | High | High | Very High |
-| **Performance Stability** | Good | Good | Good | **Excellent** | Good | Poor | Fair | Fair |
+| **Analysis** | [+ Info](./docs/v4/README.md) | [+ Info](./docs/v2/README.md) | [+ Info](./docs/v5/README.md) | [+ Info](./docs/v1/README.md) | [+ Info](./docs/v3/README.md) | [+ Info](./docs/v7/README.md) | [+ Info](./docs/v8/README.md) | [+ Info](./docs/v6/README.md) |
+| **Implementation** | [MultiThreadedRecursive](./src/main/java/info/jab/crawler/v4/MultiThreadedRecursiveCrawler.java) | [ProducerConsumer](./src/main/java/info/jab/crawler/v2/ProducerConsumerCrawler.java) | [Actor](./src/main/java/info/jab/crawler/v5/ActorCrawler.java) | [Sequential](./src/main/java/info/jab/crawler/v1/SequentialCrawler.java) | [Recursive](./src/main/java/info/jab/crawler/v3/RecursiveCrawler.java) | [StructuralConcurrency](./src/main/java/info/jab/crawler/v7/StructuralConcurrencyCrawler.java) | [HybridActorStructural](./src/main/java/info/jab/crawler/v8/HybridActorStructuralCrawler.java) | [RecursiveActor](./src/main/java/info/jab/crawler/v6/RecursiveActorCrawler.java) |
+| **Performance (JMH)** | **500.26 ms/op** ⭐ | 503.65 ms/op | 557.70 ms/op | 765.22 ms/op | 816.36 ms/op | 1570.43 ms/op | 1703.47 ms/op | 1873.83 ms/op ⚠️ |
+| **Throughput** | **High** | High | High | Low | Low | Low | Low | Low |
+| **Performance Rank** | **1st** | 2nd | 3rd | 4th | 5th | 6th | 7th | 8th |
+| **Threading** | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (configurable) | Single-threaded | Single-threaded | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) | Multi-threaded (configurable) |
+| **Complexity** | Very Complex | Complex | Very Complex | Simple | Medium | Medium | Complex | Very Complex |
+| **Order** | Non-deterministic | Non-deterministic | Non-deterministic | Deterministic | Deterministic | Non-deterministic | Non-deterministic | Non-deterministic |
+| **Scalability** | Scales with cores/threads | Scales with cores/threads | Scales with actors (distributed) | Limited | Limited | Scales with virtual threads | Scales with virtual threads + actors | Scales with actors (dynamic) |
+| **Stack Safety** | Yes (trampoline) | N/A | N/A | N/A | Yes (trampoline) | Yes (structured scopes) | Yes (structured scopes) | Yes (async recursion) |
+| **Fault Tolerance** | Limited | Limited | High | None | None | High | Very High | High |
+| **Performance Stability** | **Excellent** | Good | Good | Good | Good | Fair | Fair | Poor |
 
 ## Conclusion
 
