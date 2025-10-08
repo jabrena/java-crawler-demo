@@ -1,4 +1,4 @@
-package info.jab.crawler.v4;
+package info.jab.crawler.v9;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -13,7 +13,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for MultiThreadedRecursiveCrawler using WireMock.
+ * Integration tests for StructuredWorkerCrawler using WireMock.
  * 
  * Tests the crawler's behavior with mocked HTTP responses to ensure:
  * - Proper HTTP request handling
@@ -22,10 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Error handling for various HTTP status codes
  * - Performance characteristics with controlled responses
  */
-class MultiThreadedRecursiveCrawlerIT {
+class StructuredWorkerCrawlerIT {
 
     private WireMockServer wireMockServer;
-    private MultiThreadedRecursiveCrawler crawler;
+    private StructuredWorkerCrawler crawler;
     private String baseUrl;
 
     @BeforeEach
@@ -35,7 +35,7 @@ class MultiThreadedRecursiveCrawlerIT {
         WireMock.configureFor("localhost", 8080);
         baseUrl = "http://localhost:8080";
 
-        crawler = new MultiThreadedRecursiveCrawler(
+        crawler = new StructuredWorkerCrawler(
             2,      // maxDepth
             10,     // maxPages
             5000,   // timeoutMs
@@ -177,7 +177,7 @@ class MultiThreadedRecursiveCrawlerIT {
     @DisplayName("Should respect maximum depth limit")
     void shouldRespectMaximumDepthLimit() {
         // Given
-        MultiThreadedRecursiveCrawler shallowCrawler = new MultiThreadedRecursiveCrawler(
+        StructuredWorkerCrawler shallowCrawler = new StructuredWorkerCrawler(
             1,      // maxDepth (only 1 level deep)
             10,     // maxPages
             5000,   // timeoutMs
@@ -285,7 +285,7 @@ class MultiThreadedRecursiveCrawlerIT {
     @DisplayName("Should handle slow responses with timeout")
     void shouldHandleSlowResponsesWithTimeout() {
         // Given
-        MultiThreadedRecursiveCrawler timeoutCrawler = new MultiThreadedRecursiveCrawler(
+        StructuredWorkerCrawler timeoutCrawler = new StructuredWorkerCrawler(
             1,      // maxDepth
             5,      // maxPages
             1000,   // timeoutMs (1 second)

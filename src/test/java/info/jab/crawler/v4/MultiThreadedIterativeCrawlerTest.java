@@ -11,13 +11,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for MultiThreadedRecursiveCrawler using mocked scenarios.
+ * Unit tests for MultiThreadedIterativeCrawler using mocked scenarios.
  *
  * Note: Since JSOUP's Jsoup.connect() is a static method that's hard to mock,
  * these tests focus on testing the crawler's configuration and domain models.
  * For full integration testing with mocked HTTP responses, see the WireMock tests.
  */
-class MultiThreadedRecursiveCrawlerTest {
+class MultiThreadedIterativeCrawlerTest {
 
     @Test
     @DisplayName("Builder should create crawler with default values")
@@ -25,8 +25,8 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When
-        MultiThreadedRecursiveCrawler crawler = (MultiThreadedRecursiveCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        MultiThreadedIterativeCrawler crawler = (MultiThreadedIterativeCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE)
             .build();
 
         // Then
@@ -39,8 +39,8 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When
-        MultiThreadedRecursiveCrawler crawler = (MultiThreadedRecursiveCrawler) new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+        MultiThreadedIterativeCrawler crawler = (MultiThreadedIterativeCrawler) new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE)
             .maxDepth(3)
             .maxPages(100)
             .timeout(10000)
@@ -59,7 +59,7 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxDepth(-1))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).maxDepth(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -69,10 +69,10 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxPages(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).maxPages(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).maxPages(-10))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).maxPages(-10))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -82,10 +82,10 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).timeout(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).timeout(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).timeout(-5000))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).timeout(-5000))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -95,10 +95,10 @@ class MultiThreadedRecursiveCrawlerTest {
         // Given - no setup needed
 
         // When & Then
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).numThreads(0))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).numThreads(0))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE).numThreads(-4))
+        assertThatThrownBy(() -> new DefaultCrawlerBuilder().crawlerType(CrawlerType.MULTI_THREADED_ITERATIVE).numThreads(-4))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
