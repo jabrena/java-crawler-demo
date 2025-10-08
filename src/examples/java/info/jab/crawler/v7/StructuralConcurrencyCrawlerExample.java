@@ -1,64 +1,63 @@
-package info.jab.crawler.v6;
+package info.jab.crawler.v7;
 
 import info.jab.crawler.commons.Crawler;
-import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.DefaultCrawlerBuilder;
 import info.jab.crawler.commons.CrawlerType;
 
 /**
- * Example demonstrating the Recursive Actor Model Web Crawler (V6).
+ * Example demonstrating the Structural Concurrency Web Crawler (V7).
  *
- * This crawler showcases a hybrid approach that combines:
- * - Actor model pattern for asynchronous processing and fault tolerance
- * - Recursive design for natural tree-like crawling structure
- * - Trampoline pattern for safe deep recursion
- * - Dynamic actor spawning based on discovered links
- * - Message passing for coordination between actors
+ * This crawler showcases Java 25's structural concurrency features with:
+ * - StructuredTaskScope for managing concurrent subtasks within well-defined scopes
+ * - Automatic cancellation and cleanup when scope closes
+ * - Simplified error handling and propagation
+ * - Natural tree-like crawling structure with proper resource management
+ * - Virtual threads for efficient concurrency
+ * - Structured scoping for concurrent operations
  *
  * Key features:
- * - Each actor can recursively spawn child actors for discovered links
+ * - StructuredTaskScope provides automatic resource management
+ * - Virtual threads enable efficient concurrency without thread pool overhead
+ * - Fault isolation between concurrent branches
  * - Natural tree-like crawling structure matching web topology
- * - Asynchronous processing with CompletableFuture
- * - Fault isolation - actor failures don't affect other branches
- * - Dynamic resource management - actors created on-demand
- * - Stack-safe deep recursion using trampoline pattern
- * - Parallel execution with configurable actor count
+ * - Automatic cleanup when scope closes
+ * - Simplified error handling and propagation
+ * - Stack-safe deep recursion with structured scoping
  */
-public class RecursiveActorCrawlerExample {
+public class StructuralConcurrencyCrawlerExample {
 
     public static void main(String[] args) {
-        System.out.println("🌳 Recursive Actor Model Web Crawler (V6) Example");
-        System.out.println("=================================================");
+        System.out.println("🏗️ Structural Concurrency Web Crawler (V7) Example");
+        System.out.println("==================================================");
         System.out.println();
 
-        // Create the recursive actor-based crawler
+        // Create the structural concurrency-based crawler
         Crawler crawler = new DefaultCrawlerBuilder()
-            .crawlerType(CrawlerType.RECURSIVE_ACTOR)        // Use V6 recursive actor model crawler
-            .maxDepth(2)                                    // Crawl up to 2 levels deep
-            .maxPages(100)                                   // Limit to 100 pages maximum
-            .timeout(10000)                                  // 10 second timeout per page
-            .followExternalLinks(false)                      // Stay within the same domain
-            .startDomain("jabrena.github.io")                // Only follow links from this domain
-            .numThreads(4)                                    // Use 4 max concurrent actors
+            .crawlerType(CrawlerType.STRUCTURAL_CONCURRENCY)    // Use V7 structural concurrency crawler
+            .maxDepth(2)                                      // Crawl up to 2 levels deep
+            .maxPages(100)                                    // Limit to 100 pages maximum
+            .timeout(10000)                                   // 10 second timeout per page
+            .followExternalLinks(false)                       // Stay within the same domain
+            .startDomain("jabrena.github.io")                 // Only follow links from this domain
             .build();
 
         System.out.println("🔧 Crawler Configuration:");
-        System.out.println("  - Type: Recursive Actor Model (V6)");
+        System.out.println("  - Type: Structural Concurrency (V7)");
         System.out.println("  - Max Depth: 2 levels");
         System.out.println("  - Max Pages: 100");
         System.out.println("  - Timeout: 10 seconds per page");
-        System.out.println("  - Max Actors: 4 concurrent actors");
         System.out.println("  - Domain: jabrena.github.io only");
-        System.out.println("  - Using recursive actor spawning for natural tree structure");
-        System.out.println("  - Stack-safe deep recursion with trampoline pattern");
-        System.out.println("  - Dynamic actor creation based on discovered links");
-        System.out.println("  - Fault isolation between actor branches");
+        System.out.println("  - Using Java 25's StructuredTaskScope for concurrent operations");
+        System.out.println("  - Virtual threads for efficient concurrency");
+        System.out.println("  - Automatic resource cleanup when scope closes");
+        System.out.println("  - Fault isolation between concurrent branches");
+        System.out.println("  - Natural tree-like crawling structure");
         System.out.println();
 
         // Start crawling
         String seedUrl = "https://jabrena.github.io/cursor-rules-java/";
-        System.out.println("🌐 Starting recursive actor-based crawl from: " + seedUrl);
+        System.out.println("🌐 Starting structural concurrency crawl from: " + seedUrl);
         System.out.println();
 
         long startTime = System.currentTimeMillis();

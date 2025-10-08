@@ -38,24 +38,9 @@ class ProducerConsumerCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Starting E2E Test (Producer-Consumer) ===");
-        System.out.println("Target: " + TARGET_URL);
-
         CrawlResult result = crawler.crawl(TARGET_URL);
 
         // Then
-        System.out.println("\n=== E2E Test Results ===");
-        System.out.println(result);
-        System.out.println("\nPages crawled:");
-        result.successfulPages().forEach(page ->
-            System.out.printf("  - %s (title: %s, links: %d)%n",
-                page.url(), page.title(), page.links().size())
-        );
-
-        if (!result.failedUrls().isEmpty()) {
-            System.out.println("\nFailed URLs:");
-            result.failedUrls().forEach(url -> System.out.println("  - " + url));
-        }
 
         // Assertions
         assertThat(result.getTotalPagesCrawled())
@@ -223,10 +208,6 @@ class ProducerConsumerCrawlerE2ETest {
         long duration = System.currentTimeMillis() - startTime;
 
         // Then
-        System.out.println("\n=== Multi-threaded Performance Test ===");
-        System.out.println("Pages crawled: " + result.getTotalPagesCrawled());
-        System.out.println("Duration: " + duration + "ms");
-        System.out.println("Failed URLs: " + result.getTotalFailures());
 
         assertThat(result.getTotalPagesCrawled())
             .as("Should crawl multiple pages")

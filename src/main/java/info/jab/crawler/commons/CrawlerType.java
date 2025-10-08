@@ -46,7 +46,15 @@ public enum CrawlerType {
      * Each actor can spawn child actors for discovered links, creating dynamic actor trees.
      * Uses trampoline pattern for safe deep recursion and message passing for coordination.
      */
-    RECURSIVE_ACTOR;
+    RECURSIVE_ACTOR,
+
+    /**
+     * Structural concurrency crawler implementation.
+     * Uses Java 25's StructuredTaskScope for managing concurrent subtasks within well-defined scopes.
+     * Provides automatic cancellation, cleanup, and simplified error handling.
+     * Natural tree-like crawling structure with proper resource management through structured scoping.
+     */
+    STRUCTURAL_CONCURRENCY;
 
     /**
      * Creates a new builder instance for the selected crawler type.

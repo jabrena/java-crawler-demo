@@ -1,0 +1,96 @@
+@startuml
+!theme plain
+title Structural Concurrency Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "StructuralConcurrencyCrawler" as Crawler
+participant "StructuredTaskScope" as Scope
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> Scope: StructuredTaskScope.open()
+activate Scope
+
+Crawler -> Scope: scope.fork(() -> crawlRecursively())
+activate Scope
+
+== Recursive Crawling with Structural Concurrency ==
+loop For each URL in recursive tree
+Scope -> Crawler: crawlRecursively(url, depth)
+activate Crawler
+
+Crawler -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Crawler: HTML Document
+deactivate Jsoup
+
+Crawler -> Crawler: Extract title, content, links
+Crawler -> Result: Add successful page
+activate Result
+Result --> Crawler: Updated result
+deactivate Result
+
+alt If depth < maxDepth and links found
+Crawler -> Scope: childScope = StructuredTaskScope.open()
+activate Scope
+
+loop For each discovered link
+Crawler -> Scope: childScope.fork(() -> crawlRecursively(link, depth+1))
+activate Scope
+Scope --> Crawler: Child task created
+deactivate Scope
+end
+
+Crawler -> Scope: childScope.join()
+activate Scope
+Scope --> Crawler: All child tasks completed
+deactivate Scope
+end
+
+Crawler --> Scope: Recursive crawl completed
+deactivate Crawler
+end
+
+Crawler -> Scope: scope.join()
+activate Scope
+Scope --> Crawler: All tasks completed
+deactivate Scope
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Crawler
+  Structural Concurrency Features:
+  - StructuredTaskScope for task management
+  - Automatic cancellation and cleanup
+  - Fault isolation between subtasks
+  - Virtual threads for efficient concurrency
+  - Natural tree-like crawling structure
+  - Breadth-first traversal with parallel execution
+end note
+
+note left of Scope
+  StructuredTaskScope Benefits:
+  - Automatic resource management
+  - Cancellation propagation
+  - Exception handling and propagation
+  - Scoped value sharing
+  - Tree-like task hierarchy
+end note
+
+@enduml

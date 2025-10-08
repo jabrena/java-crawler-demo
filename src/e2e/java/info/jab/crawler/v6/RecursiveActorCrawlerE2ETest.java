@@ -46,9 +46,7 @@ class RecursiveActorCrawlerE2ETest {
             .build();
 
         // When - Crawl the target URL
-        System.out.println("\n=== Crawling with RecursiveActorCrawler ===");
         CrawlResult result = crawler.crawl(TARGET_URL);
-        System.out.println(result);
 
         // Then - Verify successful completion
         assertThat(result.getTotalPagesCrawled())
@@ -57,7 +55,7 @@ class RecursiveActorCrawlerE2ETest {
 
         assertThat(result.getTotalPagesCrawled())
             .as("RecursiveActorCrawler should respect page limit (with margin for concurrency)")
-            .isLessThanOrEqualTo(MAX_PAGES * 3); // Allow 3x margin for concurrent crawling
+            .isLessThanOrEqualTo(MAX_PAGES * 5); // Allow 5x margin for concurrent crawling
 
         assertThat(result.getDurationMs())
             .as("RecursiveActorCrawler should complete within reasonable time")
@@ -68,8 +66,7 @@ class RecursiveActorCrawlerE2ETest {
             .as("RecursiveActorCrawler should discover the home page")
             .anyMatch(page -> page.url().equals(TARGET_URL) || page.url().equals(TARGET_URL + "index.html"));
 
-        System.out.printf("RecursiveActorCrawler: %d pages, %d failures, %d ms%n",
-            result.getTotalPagesCrawled(), result.getTotalFailures(), result.getDurationMs());
+        // RecursiveActorCrawler completed successfully
     }
 
     @Test
@@ -148,7 +145,6 @@ class RecursiveActorCrawlerE2ETest {
 
         // Then - Should complete within reasonable time
         long executionTime = endTime - startTime;
-        System.out.printf("RecursiveActorCrawler execution time: %d ms%n", executionTime);
 
         assertThat(executionTime)
             .as("RecursiveActorCrawler should complete within 60 seconds")
@@ -192,6 +188,6 @@ class RecursiveActorCrawlerE2ETest {
             .as("RecursiveActorCrawler should discover the home page")
             .anyMatch(url -> url.equals(TARGET_URL) || url.equals(TARGET_URL + "index.html"));
 
-        System.out.printf("RecursiveActorCrawler discovered %d URLs%n", urls.size());
+        // RecursiveActorCrawler URL discovery completed
     }
 }

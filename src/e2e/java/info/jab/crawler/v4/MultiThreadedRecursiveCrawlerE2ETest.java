@@ -69,14 +69,8 @@ class MultiThreadedRecursiveCrawlerE2ETest {
             assertThat(page.links()).isNotNull();
         });
 
-        // Print performance metrics
+        // Performance metrics
         long executionTime = endTime - startTime;
-        System.out.printf("V4 Multi-threaded Recursive Crawler Performance:%n");
-        System.out.printf("  Pages crawled: %d%n", result.getTotalPagesCrawled());
-        System.out.printf("  Failed URLs: %d%n", result.getTotalFailures());
-        System.out.printf("  Execution time: %d ms%n", executionTime);
-        System.out.printf("  Average per page: %.2f ms%n", (double) executionTime / result.getTotalPagesCrawled());
-        System.out.printf("  Threads used: 4%n");
     }
 
     @Test
@@ -155,12 +149,10 @@ class MultiThreadedRecursiveCrawlerE2ETest {
             assertThat(result.getTotalPagesCrawled()).isGreaterThan(0);
             executionTimes[i] = endTime - startTime;
 
-            System.out.printf("Threads: %d, Time: %d ms, Pages: %d%n", 
-                threadCounts[i], executionTimes[i], result.getTotalPagesCrawled());
+            // Record execution time for analysis
         }
 
         // Verify that more threads generally improve performance (though this may vary)
-        System.out.println("Performance comparison across thread counts completed.");
     }
 
     @Test
@@ -184,7 +176,7 @@ class MultiThreadedRecursiveCrawlerE2ETest {
         assertThat(result).isNotNull();
         assertThat(result.getTotalPagesCrawled()).isGreaterThanOrEqualTo(0);
         assertThat(result.getTotalFailures()).isGreaterThanOrEqualTo(0);
-        
+
         // The sum of successful and failed should be reasonable
         int totalAttempts = result.getTotalPagesCrawled() + result.getTotalFailures();
         assertThat(totalAttempts).isGreaterThan(0);
@@ -230,7 +222,7 @@ class MultiThreadedRecursiveCrawlerE2ETest {
             assertThat(result.failedUrls()).isNotNull();
         }
 
-        System.out.println("Concurrent crawl test completed successfully with thread safety maintained.");
+        // Concurrent crawl test completed successfully with thread safety maintained
     }
 
     @Test
@@ -260,7 +252,7 @@ class MultiThreadedRecursiveCrawlerE2ETest {
             assertThat(page.content()).isNotBlank();
             assertThat(page.content().length()).isGreaterThan(10); // Should have meaningful content
             assertThat(page.links()).isNotNull();
-            
+
             // Verify links are properly extracted
             page.links().forEach(link -> {
                 assertThat(link).isNotBlank();
@@ -268,7 +260,6 @@ class MultiThreadedRecursiveCrawlerE2ETest {
             });
         });
 
-        System.out.printf("Content extraction test completed. Extracted %d pages with meaningful content.%n", 
-            result.getTotalPagesCrawled());
+        // Content extraction test completed
     }
 }

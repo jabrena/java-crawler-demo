@@ -10,6 +10,7 @@ A web crawler implementations in Java.
 - [V4: Recursive Design with Executor Service](./docs/multi-threaded-recursive-crawler-overview.png)
 - [V5: Actor Model (Message-Passing with Executor Service)](./docs/actor-model-crawler-overview.png)
 - [V6: Recursive Actor Model (Hybrid Approach)](./docs/recursive-actor-crawler-overview.png)
+- [V7: Structural Concurrency (Java 25 Preview)](./docs/structural-concurrency-crawler-overview.png)
 - Pipeline/Chain of Responsibility
 - Strategy Pattern (Pluggable Components)
 - Visitor Pattern (Content Processing)
@@ -17,6 +18,7 @@ A web crawler implementations in Java.
 ## How to test
 
 ```bash
+# Run E2E tests (requires Java 25 with preview features for V7)
 ./mvnw test -Pe2e -Dtest.e2e=true -Dtest=ComparisonE2ETest
 
 ./mvnw compile exec:java -Pexamples \
@@ -31,7 +33,37 @@ A web crawler implementations in Java.
     -Dexec.mainClass="info.jab.crawler.v5.ActorCrawlerExample"
 ./mvnw compile exec:java -Pexamples \
     -Dexec.mainClass="info.jab.crawler.v6.RecursiveActorCrawlerExample"
+# V7 requires Java 25 with preview features enabled
+# Run directly with Java (Maven exec plugin doesn't work well with preview features)
+./mvnw compile -Pexamples
+java --enable-preview -cp target/classes:$(./mvnw dependency:build-classpath \
+-q -Dmdep.outputFile=/dev/stdout)    info.jab.crawler.v7.StructuralConcurrencyCrawlerExample
 ```
+
+## Java 25 Structural Concurrency (V7)
+
+The V7 implementation demonstrates Java 25's structural concurrency features:
+
+### Requirements
+- Java 25 (Early Access) with preview features enabled
+- `--enable-preview` flag for compilation and execution
+
+### Key Benefits
+- **Automatic Resource Management**: StructuredTaskScope automatically cleans up resources when scope closes
+- **Simplified Error Handling**: Exceptions are properly propagated and handled within scopes
+- **Natural Tree Structure**: Recursive crawling with proper scoping boundaries
+- **Virtual Thread Efficiency**: Leverages virtual threads for optimal concurrency
+- **Fault Isolation**: Failures in one branch don't affect other concurrent operations
+- **Structured Scoping**: Clear boundaries for concurrent operations
+
+**Note**: The Maven exec plugin doesn't work reliably with Java 25 preview features, so direct Java execution is recommended for V7.
+
+### Maven Configuration
+The `pom.xml` is configured to automatically enable preview features for:
+- **Compiler Plugin**: Uses `maven.compiler.compilerArgs=--enable-preview`
+- **Surefire Plugin**: Uses `argLine=--enable-preview` for unit tests
+- **Failsafe Plugin**: Uses `argLine=--enable-preview` for integration/E2E tests
+- **Exec Plugin**: Uses `options=--enable-preview` for example execution
 
 ## Key Design Considerations Across All Approaches:
 

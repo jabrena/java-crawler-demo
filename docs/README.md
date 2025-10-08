@@ -1,6 +1,6 @@
 # Web Crawler Architecture Overview
 
-This document explains the five different web crawler implementations in this project: the Sequential Crawler (v1), Producer-Consumer Crawler (v2), Recursive Crawler (v3), Multi-threaded Recursive Crawler (v4), and Actor Crawler (v5). All approaches solve the same problem—crawling web pages starting from a seed URL—but use fundamentally different architectural patterns and concurrency models.
+This document explains the seven different web crawler implementations in this project: the Sequential Crawler (v1), Producer-Consumer Crawler (v2), Recursive Crawler (v3), Multi-threaded Recursive Crawler (v4), Actor Crawler (v5), Recursive Actor Crawler (v6), and Structural Concurrency Crawler (v7). All approaches solve the same problem—crawling web pages starting from a seed URL—but use fundamentally different architectural patterns and concurrency models.
 
 ## Sequential Crawler (v1)
 
@@ -294,21 +294,160 @@ See [actor-crawler-overview.png](./actor-crawler-overview.png) for the detailed 
 
 ---
 
+## Recursive Actor Crawler (v6)
+
+### Core Concept
+
+The Recursive Actor Crawler implements a **hybrid actor model with recursive design** that combines the best of both the Actor Model pattern and recursive programming. It uses dynamic actor spawning where each actor can recursively create child actors for discovered links, creating a natural tree-like crawling structure that matches the web topology.
+
+### How It Works
+
+1. **Initialization**:
+   - The client creates a crawler specifying max depth, max pages, and **maximum number of actors**
+   - A root `RecursiveActor` is created to coordinate the crawling process
+   - Thread-safe collections manage shared state across all actors
+   - An `ExecutorService` provides the execution context for asynchronous operations
+
+2. **Recursive Actor Architecture**:
+   - **Root Actor**: Starts the crawling process from the seed URL
+   - **Child Actors**: Dynamically spawned for each discovered link
+   - **Shared State**: All actors share thread-safe collections (visited URLs, results, counters)
+   - **Asynchronous Processing**: Each actor uses `CompletableFuture` for non-blocking execution
+
+3. **Recursive Processing Flow**:
+   - The root actor processes the seed URL asynchronously
+   - For each discovered link, a new child actor is spawned
+   - Each child actor:
+     - Processes its assigned URL asynchronously
+     - Fetches and parses the page with Jsoup
+     - Extracts content and links
+     - Adds the page to shared result collections
+     - Spawns its own child actors for discovered links (if depth allows)
+   - This creates a natural tree structure matching the web topology
+
+4. **Dynamic Actor Management**:
+   - Actors are created on-demand based on discovered links
+   - Each actor maintains a list of its child actors
+   - Shared state coordination through thread-safe collections
+   - Automatic cleanup when actors complete their work
+
+5. **Fault Isolation and Coordination**:
+   - Each actor operates independently and can fail without affecting others
+   - Child actor failures are handled gracefully and logged
+   - Shared state ensures consistent results across all actors
+   - Asynchronous processing prevents blocking on individual failures
+
+6. **Result**: Returns a `CrawlResult` with pages, failures, and performance statistics.
+
+### Key Characteristics
+
+- **Hybrid Architecture**: Combines Actor Model with recursive design
+- **Dynamic Actor Spawning**: Actors created on-demand for discovered links
+- **Natural Tree Structure**: Crawling structure matches web topology
+- **Asynchronous Processing**: CompletableFuture-based actors for non-blocking operations
+- **Fault Isolation**: Actor failures don't affect other branches
+- **Shared State Coordination**: Thread-safe collections for consistent results
+- **Stack-Safe Recursion**: Asynchronous execution prevents stack overflow
+- **Resource Management**: Dynamic actor creation and cleanup
+
+### Recursive Actor Benefits
+
+- **Natural Structure**: Tree-like crawling matches web topology
+- **Dynamic Scaling**: Actors created based on actual link discovery
+- **Fault Tolerance**: Independent actor operation with graceful failure handling
+- **Asynchronous Safety**: CompletableFuture prevents blocking and stack overflow
+- **Shared Coordination**: Thread-safe state management across actors
+- **Resource Efficiency**: Actors created only when needed
+
+### Diagram Reference
+
+See [recursive-actor-crawler-overview.png](./recursive-actor-crawler-overview.png) for the detailed sequence diagram showing the recursive actor model with dynamic spawning.
+
+---
+
+## Structural Concurrency Crawler (v7)
+
+### Core Concept
+
+The Structural Concurrency Crawler implements **Java 25's structural concurrency** using `StructuredTaskScope` for managing concurrent subtasks within well-defined scopes. It provides automatic resource management, cancellation propagation, and fault isolation while maintaining a natural tree-like crawling structure.
+
+### How It Works
+
+1. **Initialization**:
+   - The client creates a crawler specifying max depth, max pages, and timeout settings
+   - Thread-safe collections manage shared state for coordination
+   - Virtual threads provide efficient concurrency without thread pool overhead
+
+2. **Structured Concurrency Architecture**:
+   - **StructuredTaskScope**: Manages concurrent subtasks within well-defined scopes
+   - **Automatic Resource Management**: Scopes automatically clean up resources when closed
+   - **Cancellation Propagation**: Cancellation automatically propagates to all subtasks
+   - **Fault Isolation**: Failures in one branch don't affect others
+   - **Virtual Threads**: Efficient concurrency without traditional thread pool overhead
+
+3. **Recursive Processing with Structured Scopes**:
+   - The main crawl operation creates a `StructuredTaskScope`
+   - For each URL, the crawler recursively processes it within the scope
+   - For discovered links, child scopes are created for parallel processing
+   - Each scope manages its own set of concurrent subtasks
+   - Automatic cleanup occurs when scopes close
+
+4. **Structured Task Management**:
+   - `scope.fork()` creates subtasks for concurrent execution
+   - `scope.join()` waits for all subtasks to complete
+   - Automatic cancellation when scope closes
+   - Exception handling and propagation through scope hierarchy
+
+5. **Virtual Thread Integration**:
+   - Virtual threads provide efficient concurrency
+   - No explicit thread pool management required
+   - Automatic scaling based on workload
+   - Reduced memory overhead compared to platform threads
+
+6. **Result**: Returns a `CrawlResult` with pages, failures, and performance statistics.
+
+### Key Characteristics
+
+- **Structured Concurrency**: Java 25's StructuredTaskScope for task management
+- **Automatic Resource Management**: Scopes handle cleanup automatically
+- **Cancellation Propagation**: Automatic cancellation throughout scope hierarchy
+- **Fault Isolation**: Failures isolated within scope boundaries
+- **Virtual Threads**: Efficient concurrency without thread pool overhead
+- **Natural Tree Structure**: Recursive scoping matches web topology
+- **Simplified Error Handling**: Automatic exception propagation and handling
+- **Modern Java Features**: Leverages latest Java concurrency improvements
+
+### Structural Concurrency Benefits
+
+- **Automatic Cleanup**: Resources managed automatically by scopes
+- **Cancellation Safety**: Automatic cancellation propagation prevents resource leaks
+- **Fault Isolation**: Scope boundaries provide natural fault isolation
+- **Simplified Code**: Less boilerplate for concurrent operations
+- **Virtual Thread Efficiency**: Better resource utilization than traditional threads
+- **Exception Safety**: Automatic exception handling and propagation
+- **Modern Design**: Leverages Java's latest concurrency features
+
+### Diagram Reference
+
+See [structural-concurrency-crawler-overview.png](./structural-concurrency-crawler-overview.png) for the detailed sequence diagram showing structured concurrency with automatic resource management.
+
+---
+
 ## Comparison
 
-| Aspect | Sequential Crawler (v1) | Producer-Consumer Crawler (v2) | Recursive Crawler (v3) | Multi-threaded Recursive Crawler (v4) | Actor Crawler (v5) |
-|--------|------------------------|--------------------------------|------------------------|--------------------------------------|-------------------|
-| **Threading** | Single-threaded | Multi-threaded (configurable) | Single-threaded | Multi-threaded (configurable) | Multi-threaded (configurable) |
-| **Throughput** | Low (one page at a time) | High (N pages simultaneously) | Low (one page at a time) | High (N pages simultaneously) | High (N actors simultaneously) |
-| **Complexity** | Simple | Complex | Medium | Very Complex | Very Complex |
-| **Resource Usage** | Low | Higher (threads, memory) | Low | Higher (threads, memory) | Higher (actors, message queues) |
-| **Order** | Deterministic breadth-first | Non-deterministic | Deterministic breadth-first | Non-deterministic | Non-deterministic |
-| **Scalability** | Limited | Scales with cores/threads | Limited | Scales with cores/threads | Scales with actors (distributed) |
-| **Debugging** | Easy | More challenging | Medium | Most challenging | Most challenging |
-| **Stack Safety** | N/A (iterative) | N/A (iterative) | Yes (trampoline) | Yes (trampoline) | N/A (iterative) |
-| **Programming Style** | Imperative | Imperative | Functional | Hybrid | Actor Model |
-| **Fault Tolerance** | None | Limited | None | Limited | High (supervisor pattern) |
-| **Use Case** | Small sites, prototyping | Large sites, production | Deep sites, functional programming | Large deep sites, maximum performance | Distributed systems, fault-tolerant crawling |
+| Aspect | Sequential Crawler (v1) | Producer-Consumer Crawler (v2) | Recursive Crawler (v3) | Multi-threaded Recursive Crawler (v4) | Actor Crawler (v5) | Recursive Actor Crawler (v6) | Structural Concurrency Crawler (v7) |
+|--------|------------------------|--------------------------------|------------------------|--------------------------------------|-------------------|------------------------------|-----------------------------------|
+| **Threading** | Single-threaded | Multi-threaded (configurable) | Single-threaded | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (virtual threads) |
+| **Throughput** | Low (one page at a time) | High (N pages simultaneously) | Low (one page at a time) | High (N pages simultaneously) | High (N actors simultaneously) | High (N actors simultaneously) | High (virtual threads) |
+| **Complexity** | Simple | Complex | Medium | Very Complex | Very Complex | Very Complex | Medium |
+| **Resource Usage** | Low | Higher (threads, memory) | Low | Higher (threads, memory) | Higher (actors, message queues) | Higher (actors, shared state) | Low (virtual threads) |
+| **Order** | Deterministic breadth-first | Non-deterministic | Deterministic breadth-first | Non-deterministic | Non-deterministic | Non-deterministic | Non-deterministic |
+| **Scalability** | Limited | Scales with cores/threads | Limited | Scales with cores/threads | Scales with actors (distributed) | Scales with actors (dynamic) | Scales with virtual threads |
+| **Debugging** | Easy | More challenging | Medium | Most challenging | Most challenging | Most challenging | Medium |
+| **Stack Safety** | N/A (iterative) | N/A (iterative) | Yes (trampoline) | Yes (trampoline) | N/A (iterative) | Yes (async recursion) | Yes (structured scopes) |
+| **Programming Style** | Imperative | Imperative | Functional | Hybrid | Actor Model | Hybrid Actor-Recursive | Structured Concurrency |
+| **Fault Tolerance** | None | Limited | None | Limited | High (supervisor pattern) | High (actor isolation) | High (scope isolation) |
+| **Use Case** | Small sites, prototyping | Large sites, production | Deep sites, functional programming | Large deep sites, maximum performance | Distributed systems, fault-tolerant crawling | Tree-like sites, dynamic scaling | Modern Java, resource management |
 
 ## Architecture Insights
 
@@ -433,9 +572,62 @@ Worker Actors (parallel):
 
 Key insight: The actor model eliminates shared mutable state by using message passing, providing natural fault tolerance and the ability to scale across distributed systems.
 
+### Recursive Actor Pattern
+
+The recursive actor approach implements **Dynamic Actor Spawning** with shared state coordination:
+
+```
+RootActor ← [seed URL]
+SharedState ← {visitedUrls, results, counters}
+ChildActors ← []
+
+function processUrl(url, depth):
+    if depth > maxDepth: return
+
+    page ← fetch(url)
+    sharedState.results.add(page)
+
+    for link in page.links:
+        if not sharedState.visitedUrls.contains(link):
+            childActor ← new RecursiveActor(sharedState)
+            childActors.add(childActor)
+            childActor.processUrl(link, depth + 1)  // async
+
+    CompletableFuture.allOf(childActors).join()
+```
+
+Key insight: This pattern creates a natural tree structure where actors spawn child actors for discovered links, matching the web topology while maintaining shared state coordination.
+
+### Structural Concurrency Pattern
+
+The structural concurrency approach implements **StructuredTaskScope** for automatic resource management:
+
+```
+try (var scope = StructuredTaskScope.open()) {
+    var mainTask = scope.fork(() -> crawlRecursively(seedUrl, 0))
+
+    function crawlRecursively(url, depth):
+        if depth > maxDepth: return
+
+        page ← fetch(url)
+        results.add(page)
+
+        if depth < maxDepth:
+            try (var childScope = StructuredTaskScope.open()) {
+                for link in page.links:
+                    childScope.fork(() -> crawlRecursively(link, depth + 1))
+                childScope.join()  // automatic cleanup
+            }
+
+    scope.join()  // automatic cleanup
+}
+```
+
+Key insight: StructuredTaskScope provides automatic resource management, cancellation propagation, and fault isolation, making concurrent programming safer and more predictable.
+
 ## Diagrams
 
-All five implementations are documented with PlantUML sequence diagrams:
+All seven implementations are documented with PlantUML sequence diagrams:
 
 1. **Sequential Crawler (v1)**: [sequential-crawler-overview.png](./sequential-crawler-overview.png)
    - Shows simple, linear flow
@@ -467,15 +659,31 @@ All five implementations are documented with PlantUML sequence diagrams:
    - Fault-tolerant design
    - ![Actor Crawler Overview](./actor-crawler-overview.png)
 
+6. **Recursive Actor Crawler (v6)**: [recursive-actor-crawler-overview.png](./recursive-actor-crawler-overview.png)
+   - Shows hybrid actor model with recursive design
+   - Dynamic actor spawning for discovered links
+   - Shared state coordination across actors
+   - Natural tree-like crawling structure
+   - ![Recursive Actor Crawler Overview](./recursive-actor-crawler-overview.png)
+
+7. **Structural Concurrency Crawler (v7)**: [structural-concurrency-crawler-overview.png](./structural-concurrency-crawler-overview.png)
+   - Shows Java 25's StructuredTaskScope in action
+   - Automatic resource management and cleanup
+   - Virtual threads for efficient concurrency
+   - Fault isolation through scope boundaries
+   - ![Structural Concurrency Crawler Overview](./structural-concurrency-crawler-overview.png)
+
 ## Conclusion
 
-All five crawlers share the same public API and produce the same `CrawlResult` structure, making them interchangeable from a client perspective. The choice between them depends on your specific requirements:
+All seven crawlers share the same public API and produce the same `CrawlResult` structure, making them interchangeable from a client perspective. The choice between them depends on your specific requirements:
 
 - **Choose Sequential (v1)** for simplicity, predictability, and smaller crawling tasks
 - **Choose Producer-Consumer (v2)** for performance, scalability, and large-scale crawling operations
 - **Choose Recursive (v3)** for elegant functional programming and deep recursion without stack overflow
 - **Choose Multi-threaded Recursive (v4)** for maximum performance with stack-safe deep recursion
 - **Choose Actor (v5)** for fault-tolerant, distributed systems and message-driven concurrency
+- **Choose Recursive Actor (v6)** for tree-like sites with dynamic actor spawning and natural web topology matching
+- **Choose Structural Concurrency (v7)** for modern Java applications requiring automatic resource management and virtual thread efficiency
 
 The project demonstrates how the same problem can be solved with different architectural patterns and concurrency models:
 
@@ -484,5 +692,7 @@ The project demonstrates how the same problem can be solved with different archi
 - **v3**: Functional programming with trampoline pattern for stack-safe recursion
 - **v4**: Hybrid approach combining parallel processing with stack-safe recursion
 - **v5**: Actor model with message passing for fault-tolerant distributed systems
+- **v6**: Hybrid actor-recursive model with dynamic spawning for natural tree structures
+- **v7**: Java 25's structural concurrency with automatic resource management and virtual threads
 
-Each implementation offers unique tradeoffs between simplicity, performance, fault tolerance, and programming paradigm, showcasing different approaches to solving complex concurrent programming challenges.
+Each implementation offers unique tradeoffs between simplicity, performance, fault tolerance, and programming paradigm, showcasing different approaches to solving complex concurrent programming challenges. The evolution from v1 to v7 demonstrates the progression of Java concurrency features and design patterns, from simple sequential processing to modern structured concurrency with automatic resource management.

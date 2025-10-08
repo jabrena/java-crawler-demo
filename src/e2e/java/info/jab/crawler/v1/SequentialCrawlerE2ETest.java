@@ -37,24 +37,9 @@ class SequentialCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Starting E2E Test ===");
-        System.out.println("Target: " + TARGET_URL);
-
         CrawlResult result = crawler.crawl(TARGET_URL);
 
         // Then
-        System.out.println("\n=== E2E Test Results ===");
-        System.out.println(result);
-        System.out.println("\nPages crawled:");
-        result.successfulPages().forEach(page ->
-            System.out.printf("  - %s (title: %s, links: %d)%n",
-                page.url(), page.title(), page.links().size())
-        );
-
-        if (!result.failedUrls().isEmpty()) {
-            System.out.println("\nFailed URLs:");
-            result.failedUrls().forEach(url -> System.out.println("  - " + url));
-        }
 
         // Assertions
         assertThat(result.getTotalPagesCrawled())

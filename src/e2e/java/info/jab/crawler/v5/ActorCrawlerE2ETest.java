@@ -40,25 +40,9 @@ class ActorCrawlerE2ETest {
             .build();
 
         // When
-        System.out.println("\n=== Starting E2E Test ===");
-        System.out.println("Target: " + TARGET_URL);
-        System.out.println("Using Actor Model with 4 worker actors");
-
         CrawlResult result = crawler.crawl(TARGET_URL);
 
         // Then
-        System.out.println("\n=== E2E Test Results ===");
-        System.out.println(result);
-        System.out.println("\nPages crawled:");
-        result.successfulPages().forEach(page ->
-            System.out.printf("  - %s (title: %s, links: %d)%n",
-                page.url(), page.title(), page.links().size())
-        );
-
-        if (!result.failedUrls().isEmpty()) {
-            System.out.println("\nFailed URLs:");
-            result.failedUrls().forEach(url -> System.out.println("  - " + url));
-        }
 
         // Assertions
         assertThat(result.getTotalPagesCrawled())
@@ -244,9 +228,6 @@ class ActorCrawlerE2ETest {
         long duration2 = System.currentTimeMillis() - startTime2;
 
         // Then
-        System.out.printf("\n=== Actor Model Performance Comparison ===%n");
-        System.out.printf("Single Actor (1): %dms, %d pages%n", duration1, singleResult.getTotalPagesCrawled());
-        System.out.printf("Multi Actor (6):  %dms, %d pages%n", duration2, multiResult.getTotalPagesCrawled());
 
         // Both should crawl a reasonable number of pages (within the limit)
         assertThat(singleResult.getTotalPagesCrawled())
@@ -269,13 +250,6 @@ class ActorCrawlerE2ETest {
             .anyMatch(page -> page.url().equals(TARGET_URL) || page.url().equals(TARGET_URL + "index.html"));
 
         // Multi-actor should be at least as fast (or faster due to parallelization)
-        // Note: This might not always be true due to network variability, so we just log it
-        if (duration2 < duration1) {
-            System.out.printf("✓ Multi-actor was %.1f%% faster%n",
-                (double)(duration1 - duration2) / duration1 * 100);
-        } else {
-            System.out.printf("ℹ Single-actor was %.1f%% faster (network variability)%n",
-                (double)(duration2 - duration1) / duration2 * 100);
-        }
+        // Note: This might not always be true due to network variability
     }
 }
