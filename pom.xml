@@ -9,7 +9,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>25</java.version>
+    <java.version>21</java.version>
     <maven.compiler.compilerArgs>--enable-preview</maven.compiler.compilerArgs>
     <maven.compiler.testCompilerArgs>--enable-preview</maven.compiler.testCompilerArgs>
 
