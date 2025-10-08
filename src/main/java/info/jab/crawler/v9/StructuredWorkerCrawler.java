@@ -90,7 +90,7 @@ public class StructuredWorkerCrawler implements Crawler {
 
         try {
             // Create structured scope for the entire crawl operation
-            try (var scope = StructuredTaskScope.<Void>open()) {
+            try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
                 // Create worker tasks using structured concurrency
                 List<StructuredTaskScope.Subtask<Void>> workerTasks = new ArrayList<>();
 
