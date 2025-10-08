@@ -106,6 +106,7 @@ public class SequentialCrawler implements Crawler {
             .map(element -> element.absUrl("href"))
             .filter(link -> !link.isEmpty())
             .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
+            .filter(link -> !link.contains("#")) // Exclude fragment-only links
             .toList();
     }
 

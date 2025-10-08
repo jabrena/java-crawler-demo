@@ -38,7 +38,15 @@ public enum CrawlerType {
      * Uses CompletableFuture-based actors with supervisor pattern for coordination.
      * Provides fault tolerance, message passing, and parallel processing.
      */
-    ACTOR;
+    ACTOR,
+
+    /**
+     * Recursive actor model crawler implementation.
+     * Combines actor model with recursive design for natural tree-like crawling.
+     * Each actor can spawn child actors for discovered links, creating dynamic actor trees.
+     * Uses trampoline pattern for safe deep recursion and message passing for coordination.
+     */
+    RECURSIVE_ACTOR;
 
     /**
      * Creates a new builder instance for the selected crawler type.
