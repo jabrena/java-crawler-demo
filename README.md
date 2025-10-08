@@ -1,6 +1,6 @@
 # Java Crawler Demo
 
-A web crawler implementations in Java.
+A repository about a collection of web crawler implementation in Java.
 
 ## Comparison Matrix
 
