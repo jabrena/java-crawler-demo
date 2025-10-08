@@ -8,8 +8,7 @@ A web crawler implementations in Java.
 - [V2: Producer-Consumer Pattern (Executor Service)](./docs/producer-consumer-crawler-overview.png)
 - [V3: Recursive Design](./docs/recursive-crawler-overview.png)
 - [V4: Multi-threaded Recursive Design](./docs/multi-threaded-recursive-crawler-overview.png)
-- Event-Driven/Reactive Design
-- Actor Model (Message-Passing)
+- [V5: Actor Model (Message-Passing)](./docs/actor-model-crawler-overview.png)
 - Pipeline/Chain of Responsibility
 - Strategy Pattern (Pluggable Components)
 - Visitor Pattern (Content Processing)
@@ -17,10 +16,16 @@ A web crawler implementations in Java.
 ## How to test
 
 ```bash
-./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v1.SequentialCrawlerExample"
-./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v2.ProducerConsumerCrawlerExample"
-./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v3.RecursiveCrawlerExample"
-./mvnw compile exec:java -Pexamples -Dexec.mainClass="info.jab.crawler.v4.MultiThreadedRecursiveCrawlerExample"
+./mvnw compile exec:java -Pexamples \
+    -Dexec.mainClass="info.jab.crawler.v1.SequentialCrawlerExample"
+./mvnw compile exec:java -Pexamples \
+    -Dexec.mainClass="info.jab.crawler.v2.ProducerConsumerCrawlerExample"
+./mvnw compile exec:java -Pexamples \
+    -Dexec.mainClass="info.jab.crawler.v3.RecursiveCrawlerExample"
+./mvnw compile exec:java -Pexamples \
+    -Dexec.mainClass="info.jab.crawler.v4.MultiThreadedRecursiveCrawlerExample"
+./mvnw compile exec:java -Pexamples \
+    -Dexec.mainClass="info.jab.crawler.v5.ActorCrawlerExample"
 ```
 
 ## Key Design Considerations Across All Approaches:

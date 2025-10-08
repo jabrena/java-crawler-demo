@@ -1,6 +1,6 @@
 # Web Crawler Architecture Overview
 
-This document explains the four different web crawler implementations in this project: the Sequential Crawler (v1), Producer-Consumer Crawler (v2), Recursive Crawler (v3), and Multi-threaded Recursive Crawler (v4). All approaches solve the same problem—crawling web pages starting from a seed URL—but use fundamentally different architectural patterns and concurrency models.
+This document explains the five different web crawler implementations in this project: the Sequential Crawler (v1), Producer-Consumer Crawler (v2), Recursive Crawler (v3), Multi-threaded Recursive Crawler (v4), and Actor Crawler (v5). All approaches solve the same problem—crawling web pages starting from a seed URL—but use fundamentally different architectural patterns and concurrency models.
 
 ## Sequential Crawler (v1)
 
@@ -215,20 +215,100 @@ See [multi-threaded-recursive-crawler-overview.png](./multi-threaded-recursive-c
 
 ---
 
+## Actor Crawler (v5)
+
+### Core Concept
+
+The Actor Crawler implements the **Actor Model pattern** using **CompletableFuture-based actors** and **asynchronous message passing**. It uses a supervisor-worker architecture where actors communicate through immutable messages, providing fault tolerance, loose coupling, and high scalability for concurrent web crawling operations.
+
+### How It Works
+
+1. **Initialization**:
+   - The client creates a crawler specifying max depth, max pages, and **number of actors**
+   - A `SupervisorActor` is created to coordinate the crawling process
+   - Multiple `WorkerActor` instances are created for parallel URL processing
+   - Thread-safe collections manage shared state and message queues
+
+2. **Actor System Architecture**:
+   - **Supervisor Actor**: Coordinates the overall crawling process, manages worker actors, and aggregates results
+   - **Worker Actors**: Process individual URLs asynchronously using CompletableFuture
+   - **Message Passing**: Actors communicate through immutable message objects (CrawlMessage, ResultMessage, ErrorMessage, CompletionMessage)
+   - **Asynchronous Processing**: All operations are non-blocking and use CompletableFuture for async execution
+
+3. **Message-Driven Processing**:
+   - The seed URL is wrapped in a `CrawlMessage` and sent to the supervisor
+   - The supervisor distributes `CrawlMessage` objects to available worker actors
+   - Each worker actor:
+     - Receives a `CrawlMessage` with URL and depth information
+     - Fetches and parses the page with Jsoup asynchronously
+     - Extracts content and links
+     - Sends back a `ResultMessage` with the page data and discovered links
+     - Sends a `CompletionMessage` to signal task completion
+   - The supervisor processes messages and queues new URLs for crawling
+
+4. **Coordination Loop**:
+   - The supervisor runs a coordination loop that:
+     - Processes pending messages from worker actors
+     - Distributes new work to available workers
+     - Tracks visited URLs to avoid duplicates
+     - Aggregates results from all workers
+     - Detects when crawling is complete
+   - Uses thread-safe collections for coordination without explicit locks
+
+5. **Fault Tolerance**:
+   - Each actor operates independently and can fail without affecting others
+   - Error messages are handled gracefully and logged
+   - The supervisor pattern provides fault isolation
+   - Asynchronous processing prevents blocking on individual failures
+
+6. **Result**: Returns a `CrawlResult` with pages, failures, and performance statistics.
+
+### Key Characteristics
+
+- **Actor Model**: Message-passing concurrency with no shared mutable state
+- **Asynchronous Processing**: CompletableFuture-based actors for non-blocking operations
+- **Fault Tolerance**: Supervisor pattern provides fault isolation and recovery
+- **Loose Coupling**: Actors communicate only through immutable messages
+- **High Scalability**: Can handle large numbers of concurrent operations
+- **Thread-Safe Design**: Uses concurrent collections and atomic operations
+- **Message-Driven**: All coordination happens through message passing
+
+### Actor Model Benefits
+
+- **No Shared State**: Actors don't share mutable state, eliminating race conditions
+- **Fault Isolation**: Failure of one actor doesn't affect others
+- **Location Transparency**: Actors can be distributed across different machines
+- **Elastic Scaling**: Can dynamically add or remove actors based on load
+- **Natural Concurrency**: Message passing is inherently concurrent and safe
+
+### Message Types
+
+- **CrawlMessage**: Request to crawl a specific URL at a given depth
+- **ResultMessage**: Successful crawl result with page data and discovered links
+- **ErrorMessage**: Error that occurred while crawling a URL
+- **CompletionMessage**: Signal that a worker has completed its current task
+
+### Diagram Reference
+
+See [actor-crawler-overview.png](./actor-crawler-overview.png) for the detailed sequence diagram showing the actor model with message passing.
+
+---
+
 ## Comparison
 
-| Aspect | Sequential Crawler (v1) | Producer-Consumer Crawler (v2) | Recursive Crawler (v3) | Multi-threaded Recursive Crawler (v4) |
-|--------|------------------------|--------------------------------|------------------------|--------------------------------------|
-| **Threading** | Single-threaded | Multi-threaded (configurable) | Single-threaded | Multi-threaded (configurable) |
-| **Throughput** | Low (one page at a time) | High (N pages simultaneously) | Low (one page at a time) | High (N pages simultaneously) |
-| **Complexity** | Simple | Complex | Medium | Very Complex |
-| **Resource Usage** | Low | Higher (threads, memory) | Low | Higher (threads, memory) |
-| **Order** | Deterministic breadth-first | Non-deterministic | Deterministic breadth-first | Non-deterministic |
-| **Scalability** | Limited | Scales with cores/threads | Limited | Scales with cores/threads |
-| **Debugging** | Easy | More challenging | Medium | Most challenging |
-| **Stack Safety** | N/A (iterative) | N/A (iterative) | Yes (trampoline) | Yes (trampoline) |
-| **Programming Style** | Imperative | Imperative | Functional | Hybrid |
-| **Use Case** | Small sites, prototyping | Large sites, production | Deep sites, functional programming | Large deep sites, maximum performance |
+| Aspect | Sequential Crawler (v1) | Producer-Consumer Crawler (v2) | Recursive Crawler (v3) | Multi-threaded Recursive Crawler (v4) | Actor Crawler (v5) |
+|--------|------------------------|--------------------------------|------------------------|--------------------------------------|-------------------|
+| **Threading** | Single-threaded | Multi-threaded (configurable) | Single-threaded | Multi-threaded (configurable) | Multi-threaded (configurable) |
+| **Throughput** | Low (one page at a time) | High (N pages simultaneously) | Low (one page at a time) | High (N pages simultaneously) | High (N actors simultaneously) |
+| **Complexity** | Simple | Complex | Medium | Very Complex | Very Complex |
+| **Resource Usage** | Low | Higher (threads, memory) | Low | Higher (threads, memory) | Higher (actors, message queues) |
+| **Order** | Deterministic breadth-first | Non-deterministic | Deterministic breadth-first | Non-deterministic | Non-deterministic |
+| **Scalability** | Limited | Scales with cores/threads | Limited | Scales with cores/threads | Scales with actors (distributed) |
+| **Debugging** | Easy | More challenging | Medium | Most challenging | Most challenging |
+| **Stack Safety** | N/A (iterative) | N/A (iterative) | Yes (trampoline) | Yes (trampoline) | N/A (iterative) |
+| **Programming Style** | Imperative | Imperative | Functional | Hybrid | Actor Model |
+| **Fault Tolerance** | None | Limited | None | Limited | High (supervisor pattern) |
+| **Use Case** | Small sites, prototyping | Large sites, production | Deep sites, functional programming | Large deep sites, maximum performance | Distributed systems, fault-tolerant crawling |
 
 ## Architecture Insights
 
@@ -327,9 +407,35 @@ Workers (parallel):
 
 Key insight: This hybrid pattern achieves maximum performance by combining parallel processing with stack-safe recursion, where each thread maintains its own trampoline instance.
 
+### Actor Model Pattern
+
+The actor-based approach implements the **Actor Model** with message passing:
+
+```
+SupervisorActor ← [seed URL]
+MessageQueue ← []
+WorkerActors ← [N actors]
+
+Supervisor Loop:
+    while not complete:
+        processMessages()  // Handle ResultMessage, ErrorMessage, CompletionMessage
+        distributeWork()   // Send CrawlMessage to available workers
+        checkCompletion()  // Check if crawling is complete
+
+Worker Actors (parallel):
+    while active:
+        message ← receive(CrawlMessage)
+        page ← fetch(message.url)  // async with CompletableFuture
+        links ← extractLinks(page)
+        send(ResultMessage(page, links, depth))
+        send(CompletionMessage())
+```
+
+Key insight: The actor model eliminates shared mutable state by using message passing, providing natural fault tolerance and the ability to scale across distributed systems.
+
 ## Diagrams
 
-All four implementations are documented with PlantUML sequence diagrams:
+All five implementations are documented with PlantUML sequence diagrams:
 
 1. **Sequential Crawler (v1)**: [sequential-crawler-overview.png](./sequential-crawler-overview.png)
    - Shows simple, linear flow
@@ -354,14 +460,22 @@ All four implementations are documented with PlantUML sequence diagrams:
    - Maximum performance design
    - ![Multi-threaded Recursive Crawler Overview](./multi-threaded-recursive-crawler-overview.png)
 
+5. **Actor Crawler (v5)**: [actor-crawler-overview.png](./actor-crawler-overview.png)
+   - Shows actor model with supervisor-worker pattern
+   - Message passing between actors
+   - Asynchronous processing with CompletableFuture
+   - Fault-tolerant design
+   - ![Actor Crawler Overview](./actor-crawler-overview.png)
+
 ## Conclusion
 
-All four crawlers share the same public API and produce the same `CrawlResult` structure, making them interchangeable from a client perspective. The choice between them depends on your specific requirements:
+All five crawlers share the same public API and produce the same `CrawlResult` structure, making them interchangeable from a client perspective. The choice between them depends on your specific requirements:
 
 - **Choose Sequential (v1)** for simplicity, predictability, and smaller crawling tasks
 - **Choose Producer-Consumer (v2)** for performance, scalability, and large-scale crawling operations
 - **Choose Recursive (v3)** for elegant functional programming and deep recursion without stack overflow
 - **Choose Multi-threaded Recursive (v4)** for maximum performance with stack-safe deep recursion
+- **Choose Actor (v5)** for fault-tolerant, distributed systems and message-driven concurrency
 
 The project demonstrates how the same problem can be solved with different architectural patterns and concurrency models:
 
@@ -369,5 +483,6 @@ The project demonstrates how the same problem can be solved with different archi
 - **v2**: Multi-threaded producer-consumer pattern for parallel processing
 - **v3**: Functional programming with trampoline pattern for stack-safe recursion
 - **v4**: Hybrid approach combining parallel processing with stack-safe recursion
+- **v5**: Actor model with message passing for fault-tolerant distributed systems
 
-Each implementation offers unique tradeoffs between simplicity, performance, and programming paradigm, showcasing different approaches to solving complex concurrent programming challenges.
+Each implementation offers unique tradeoffs between simplicity, performance, fault tolerance, and programming paradigm, showcasing different approaches to solving complex concurrent programming challenges.

@@ -31,7 +31,14 @@ public enum CrawlerType {
      * Combines multi-threading with recursive design using trampoline pattern.
      * Provides parallel performance with stack-safe deep recursion.
      */
-    MULTI_THREADED_RECURSIVE;
+    MULTI_THREADED_RECURSIVE,
+
+    /**
+     * Actor model crawler implementation.
+     * Uses CompletableFuture-based actors with supervisor pattern for coordination.
+     * Provides fault tolerance, message passing, and parallel processing.
+     */
+    ACTOR;
 
     /**
      * Creates a new builder instance for the selected crawler type.

@@ -95,14 +95,14 @@ class MultiThreadedRecursiveCrawlerTest {
         MultiThreadedRecursiveCrawler shallowCrawler = new MultiThreadedRecursiveCrawler(
             0,      // maxDepth (no recursion)
             10,     // maxPages
-            1000,   // timeoutMs (shorter timeout)
+            5000,   // timeoutMs (5 second timeout)
             false,  // followExternalLinks
             "httpbin.org", // startDomain
             2       // numThreads
         );
 
-        // When - Use a simple URL that should respond quickly
-        CrawlResult result = shallowCrawler.crawl("https://httpbin.org/status/200");
+        // When - Use a simple HTML URL that should respond quickly
+        CrawlResult result = shallowCrawler.crawl("https://httpbin.org/html");
 
         // Then
         assertThat(result).isNotNull();

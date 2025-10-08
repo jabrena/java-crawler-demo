@@ -1,0 +1,83 @@
+@startuml
+!theme plain
+title Actor Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "ActorCrawler" as Crawler
+participant "SupervisorActor" as Supervisor
+participant "WorkerActor" as Worker
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.numActors(4)\n.build()
+activate Crawler
+
+== Actor System Initialization ==
+Crawler -> Supervisor: new SupervisorActor(config)
+activate Supervisor
+Supervisor -> Worker: create N WorkerActors
+activate Worker
+Worker --> Supervisor: Worker actors ready
+deactivate Worker
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+Crawler -> Supervisor: start(seedUrl)
+Supervisor -> Supervisor: Add seed URL to queue
+
+loop Coordination Loop
+    Supervisor -> Supervisor: processPendingMessages()
+    Supervisor -> Supervisor: distributeWork()
+
+    alt URL available and worker free
+        Supervisor -> Worker: processUrl(CrawlMessage)
+        activate Worker
+        Worker -> Jsoup: connect(url).get()
+        activate Jsoup
+        Jsoup --> Worker: HTML Document
+        deactivate Jsoup
+
+        Worker -> Worker: Extract title, content, links
+        Worker --> Supervisor: ResultMessage(page, links, depth)
+        Worker --> Supervisor: CompletionMessage()
+        deactivate Worker
+
+        Supervisor -> Supervisor: Add page to results
+        Supervisor -> Supervisor: Queue new links\n(if depth < maxDepth)
+    end
+
+    Supervisor -> Supervisor: Check completion conditions
+end
+
+Supervisor --> Crawler: CrawlResult
+deactivate Supervisor
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Supervisor
+  Actor Model Features:
+  - Message passing between actors
+  - Asynchronous processing
+  - Fault tolerance
+  - Thread-safe coordination
+  - Supervisor pattern
+end note
+
+note left of Worker
+  Worker Actor Features:
+  - CompletableFuture-based
+  - Asynchronous URL processing
+  - Error handling
+  - Message-based communication
+end note
+
+@enduml
