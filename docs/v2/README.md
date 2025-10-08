@@ -80,7 +80,7 @@ Key insight: Each worker is both a **consumer** (taking URLs from the queue) and
 
 ## Diagram Reference
 
-See [producer-consumer-crawler-overview.png](./producer-consumer-crawler-overview.png) for the detailed sequence diagram showing multi-threaded interactions.
+![Producer-Consumer Crawler Overview](./producer-consumer-crawler-overview.png)
 
 ## Use Case
 

@@ -35,5 +35,20 @@
 # Generate project reports
 ./mvnw site
 jwebserver -p 8005 -d "$(pwd)/target/site/"
+
+# JMH Benchmarks
+# Build JMH benchmarks
+./mvnw clean package -Pjmh
+
+# List all available JMH benchmarks
+java -jar target/jmh-benchmarks.jar -l
+
+# Run all crawler benchmarks and save results to JSON
+java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks.CrawlerBenchmark -rf json -rff src/jmh/test/resources/jmh-crawler-benchmark-results.json
+
+# Note: JMH 1.37 has partial compatibility issues with Java 25 preview features
+# Some benchmarks may fail with "InfraControl" errors when using forked execution
+# However, several benchmarks (ActorCrawler, MultiThreadedRecursiveCrawler, etc.) run successfully
+# Results are saved in: src/jmh/test/resources/jmh-crawler-benchmark-results.json
 ```
 

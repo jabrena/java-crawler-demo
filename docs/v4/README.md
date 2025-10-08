@@ -84,7 +84,7 @@ Key insight: This hybrid pattern achieves maximum performance by combining paral
 
 ## Diagram Reference
 
-See [multi-threaded-recursive-crawler-overview.png](./multi-threaded-recursive-crawler-overview.png) for the detailed sequence diagram showing the hybrid architecture with parallel recursive processing.
+![Multi-threaded Recursive Crawler Overview](./multi-threaded-recursive-crawler-overview.png)
 
 ## Use Case
 

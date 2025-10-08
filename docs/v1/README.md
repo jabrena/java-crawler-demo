@@ -51,7 +51,7 @@ while Queue is not empty:
 
 ## Diagram Reference
 
-See [sequential-crawler-overview.png](./sequential-crawler-overview.png) for the detailed sequence diagram.
+![Sequential Crawler Overview](./sequential-crawler-overview.png)
 
 ## Use Case
 

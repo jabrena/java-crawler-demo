@@ -91,7 +91,7 @@ Key insight: This pattern creates a natural tree structure where actors spawn ch
 
 ## Diagram Reference
 
-See [recursive-actor-crawler-overview.png](./recursive-actor-crawler-overview.png) for the detailed sequence diagram showing the recursive actor model with dynamic spawning.
+![Recursive Actor Crawler Overview](./recursive-actor-crawler-overview.png)
 
 ## Use Case
 

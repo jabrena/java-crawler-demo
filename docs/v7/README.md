@@ -89,7 +89,7 @@ Key insight: StructuredTaskScope provides automatic resource management, cancell
 
 ## Diagram Reference
 
-See [structural-concurrency-crawler-overview.png](./structural-concurrency-crawler-overview.png) for the detailed sequence diagram showing structured concurrency with automatic resource management.
+![Structural Concurrency Crawler Overview](./structural-concurrency-crawler-overview.png)
 
 ## Use Case
 

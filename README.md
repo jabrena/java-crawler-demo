@@ -2,6 +2,8 @@
 
 A web crawler implementations in Java.
 
+## [Conclusions](./docs/README.md)
+
 ## Design alternatives
 
 - [V1: Sequential](./docs/v1/sequential-crawler-overview.png)
@@ -45,73 +47,5 @@ java --enable-preview -cp target/classes:$(./mvnw dependency:build-classpath \
 java --enable-preview -cp target/classes:$(./mvnw dependency:build-classpath \
 -q -Dmdep.outputFile=/dev/stdout)    info.jab.crawler.v8.HybridActorStructuralCrawlerExample
 ```
-
-## Java 25 Structural Concurrency (V7)
-
-The V7 implementation demonstrates Java 25's structural concurrency features:
-
-### Requirements
-- Java 25 (Early Access) with preview features enabled
-- `--enable-preview` flag for compilation and execution
-
-### Key Benefits
-- **Automatic Resource Management**: StructuredTaskScope automatically cleans up resources when scope closes
-- **Simplified Error Handling**: Exceptions are properly propagated and handled within scopes
-- **Natural Tree Structure**: Recursive crawling with proper scoping boundaries
-- **Virtual Thread Efficiency**: Leverages virtual threads for optimal concurrency
-- **Fault Isolation**: Failures in one branch don't affect other concurrent operations
-- **Structured Scoping**: Clear boundaries for concurrent operations
-
-**Note**: The Maven exec plugin doesn't work reliably with Java 25 preview features, so direct Java execution is recommended for V7.
-
-## Java 25 Hybrid Actor-Structural Concurrency (V8)
-
-The V8 implementation combines the best of both paradigms:
-
-### Requirements
-- Java 25 (Early Access) with preview features enabled
-- `--enable-preview` flag for compilation and execution
-
-### Key Benefits
-- **Actor-Based Coordination**: Supervisor actor manages state, coordination, and fault tolerance
-- **Structural Concurrency**: Automatic resource management with StructuredTaskScope
-- **Message Passing**: Reuses v6 ActorMessage system for coordination
-- **Virtual Thread Efficiency**: Leverages virtual threads for optimal I/O operations
-- **Fault Isolation**: Actor coordination failures don't affect crawling tasks
-- **Hybrid Architecture**: Best of both actor model and structural concurrency
-
-### Architecture
-```
-V8 Hybrid Approach:
-├── SupervisorActor (Actor-based coordination)
-│   ├── State Management (visitedUrls, successfulPages, failedUrls)
-│   ├── Message Processing (using v6 ActorMessage system)
-│   └── Fault Tolerance (supervisor pattern)
-└── Structural Concurrency (actual crawling work)
-    ├── StructuredTaskScope for parallel page fetching
-    ├── Automatic resource management
-    ├── Virtual threads for I/O efficiency
-    └── Built-in cancellation propagation
-```
-
-**Note**: The Maven exec plugin doesn't work reliably with Java 25 preview features, so direct Java execution is recommended for V8.
-
-### Maven Configuration
-The `pom.xml` is configured to automatically enable preview features for:
-- **Compiler Plugin**: Uses `maven.compiler.compilerArgs=--enable-preview`
-- **Surefire Plugin**: Uses `argLine=--enable-preview` for unit tests
-- **Failsafe Plugin**: Uses `argLine=--enable-preview` for integration/E2E tests
-- **Exec Plugin**: Uses `options=--enable-preview` for example execution
-
-## Key Design Considerations Across All Approaches:
-
-- URL Frontier Management: Queue, Priority Queue, or Database-backed
-- Politeness: Rate limiting, respecting robots.txt
-- Deduplication: Visited URL tracking (Set, Bloom Filter, Database)
-- Error Handling: Retry logic, circuit breakers
-- State Management: In-memory, persistent, or distributed
-- Parsing Strategy: CSS selectors vs XPath vs DOM traversal
-- Data Extraction: Direct extraction vs Visitor pattern
-- Storage: In-memory, files, databases
 
 Powered by [Cursor](https://www.cursor.com/) with ❤️ from [Madrid](https://www.google.com/maps/place/Community+of+Madrid,+Madrid/@40.4983324,-6.3162283,8z/data=!3m1!4b1!4m6!3m5!1s0xd41817a40e033b9:0x10340f3be4bc880!8m2!3d40.4167088!4d-3.5812692!16zL20vMGo0eGc?entry=ttu&g_ep=EgoyMDI1MDgxOC4wIKXMDSoASAFQAw%3D%3D)
