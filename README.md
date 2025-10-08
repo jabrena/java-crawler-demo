@@ -6,8 +6,8 @@ A web crawler implementations in Java.
 
 - [V1: Sequential](./docs/sequential-crawler-overview.png)
 - [V2: Producer-Consumer Pattern (Executor Service)](./docs/producer-consumer-crawler-overview.png)
-- [V3: Recursive Design]()
-- [V4: Multi-threaded Recursive Design]()
+- [V3: Recursive Design](./docs/recursive-crawler-overview.png)
+- [V4: Multi-threaded Recursive Design](./docs/multi-threaded-recursive-crawler-overview.png)
 - Event-Driven/Reactive Design
 - Actor Model (Message-Passing)
 - Pipeline/Chain of Responsibility
