@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * This crawler implements a hybrid approach that combines:
  * - Actor model pattern for asynchronous processing and fault tolerance
  * - Recursive design for natural tree-like crawling structure
- * - Trampoline pattern for safe deep recursion
+ * - Asynchronous execution with CompletableFuture for safe deep recursion
  * - Dynamic actor spawning based on discovered links
  * - Message passing for coordination between actors
  *

@@ -2,7 +2,6 @@ package info.jab.crawler.v6;
 
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import info.jab.crawler.commons.Trampoline;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -22,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Coordinating with child actors via message passing
  * - Aggregating results from child actors
  * - Managing actor lifecycle and resource limits
- * - Using trampoline pattern for safe deep recursion
+ * - Asynchronous execution with CompletableFuture for safe deep recursion
  *
  * The actor processes URLs asynchronously and can spawn child actors
  * dynamically based on discovered links, creating a natural tree structure.
@@ -119,7 +118,7 @@ public class RecursiveActor {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                // Process this URL directly without trampoline for actor model
+                // Process this URL asynchronously using CompletableFuture
                 processUrl(url, depth);
 
                 // Create final result with all pages from shared collections
