@@ -83,7 +83,7 @@ public class StructuralConcurrencyCrawler implements Crawler {
 
         try {
             // Create structured scope for the entire crawl operation
-            try (var scope = new StructuredTaskScope<Void>()) {
+            try (var scope = StructuredTaskScope.<Void>open()) {
                 // Start the recursive crawling process
                 var crawlTask = scope.fork(() -> {
                     crawlRecursively(seedUrl, 0, visitedUrls, successfulPages, failedUrls, pagesCrawled);
@@ -161,7 +161,7 @@ public class StructuralConcurrencyCrawler implements Crawler {
             // Process discovered links if within depth limit
             if (depth < maxDepth && !links.isEmpty()) {
                 // Create a new structured scope for child crawls
-                try (var childScope = new StructuredTaskScope<Void>()) {
+                try (var childScope = StructuredTaskScope.<Void>open()) {
                     List<StructuredTaskScope.Subtask<Void>> childTasks = new ArrayList<>();
 
                     for (String link : links) {

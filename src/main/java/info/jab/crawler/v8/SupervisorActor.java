@@ -147,7 +147,7 @@ public class SupervisorActor {
             // Process discovered links if within depth limit
             if (depth < maxDepth && !links.isEmpty()) {
                 // Create a new structured scope for child crawls
-                try (var childScope = new StructuredTaskScope<Void>()) {
+                try (var childScope = StructuredTaskScope.<Void>open()) {
                     List<StructuredTaskScope.Subtask<Void>> childTasks = new ArrayList<>();
 
                     for (String link : links) {
