@@ -69,7 +69,7 @@ Key insight: The trampoline converts recursive calls into iterative loops, preve
 
 ## Diagram Reference
 
-See [recursive-crawler-overview.png](./recursive-crawler-overview.png) for the detailed sequence diagram showing the trampoline pattern in action.
+![Recursive Crawler Overview](./recursive-crawler-overview.png)
 
 ## Use Case
 

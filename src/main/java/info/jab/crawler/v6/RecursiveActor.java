@@ -308,6 +308,21 @@ public class RecursiveActor {
     }
 
     /**
+     * Gets the current partial results from the actor.
+     * This is useful when a timeout occurs and we want to return what was crawled so far.
+     *
+     * @return CrawlResult with current state
+     */
+    public CrawlResult getPartialResults() {
+        return new CrawlResult(
+            new ArrayList<>(successfulPages),
+            new ArrayList<>(failedUrls),
+            System.currentTimeMillis(),
+            System.currentTimeMillis()
+        );
+    }
+
+    /**
      * Shuts down the actor and all child actors.
      */
     public void shutdown() {

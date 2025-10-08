@@ -97,7 +97,7 @@ Key insight: This hybrid pattern provides the coordination benefits of the actor
 
 ## Diagram Reference
 
-See [hybrid-actor-structural-crawler-overview.png](./hybrid-actor-structural-crawler-overview.png) for the detailed sequence diagram showing the hybrid architecture with actor coordination and structural concurrency.
+![Hybrid Actor-Structural Crawler Overview](./hybrid-actor-structural-crawler-overview.png)
 
 ## Use Case
 

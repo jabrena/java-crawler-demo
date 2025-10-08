@@ -7,3 +7,4 @@ target/
 *.log
 .classpath
 CURSOR-RULES-JAVA.md
+dependency-reduced-pom.xml

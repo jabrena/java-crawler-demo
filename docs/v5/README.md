@@ -99,7 +99,7 @@ Key insight: The actor model eliminates shared mutable state by using message pa
 
 ## Diagram Reference
 
-See [actor-crawler-overview.png](./actor-crawler-overview.png) for the detailed sequence diagram showing the actor model with message passing.
+![Actor Crawler Overview](./actor-crawler-overview.png)
 
 ## Use Case
 

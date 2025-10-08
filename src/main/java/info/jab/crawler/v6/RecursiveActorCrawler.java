@@ -76,11 +76,17 @@ public class RecursiveActorCrawler implements Crawler {
             // Start recursive crawling and wait for completion
             CompletableFuture<CrawlResult> crawlFuture = rootActor.crawlRecursively(seedUrl, 0);
 
-            // Wait for completion with timeout
-            return crawlFuture.get(timeoutMs * 2, TimeUnit.MILLISECONDS);
+            // Wait for completion with timeout - use a reasonable timeout for the overall operation
+            long overallTimeout = Math.max(timeoutMs * 10, 5000); // At least 5 seconds
+            return crawlFuture.get(overallTimeout, TimeUnit.MILLISECONDS);
 
+        } catch (java.util.concurrent.TimeoutException e) {
+            // Handle timeout gracefully - return partial results
+            CrawlResult partialResult = rootActor.getPartialResults();
+            rootActor.shutdown();
+            return partialResult;
         } catch (Exception e) {
-            // Handle any errors during crawling
+            // Handle any other errors during crawling
             throw new RuntimeException("Recursive actor crawling failed: " + e.getMessage(), e);
         } finally {
             // Ensure root actor is shut down

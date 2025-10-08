@@ -12,6 +12,12 @@
     <java.version>25</java.version>
     <maven.compiler.compilerArgs>--enable-preview</maven.compiler.compilerArgs>
     <maven.compiler.testCompilerArgs>--enable-preview</maven.compiler.testCompilerArgs>
+
+    <!-- JMH-related properties -->
+    <jmh.version>1.37</jmh.version>
+    <maven-plugin-build-helper.version>3.4.0</maven-plugin-build-helper.version>
+    <maven-plugin-shade.version>3.5.1</maven-plugin-shade.version>
+    <maven-plugin-compiler.version>3.13.0</maven-plugin-compiler.version>
   </properties>
 
   <dependencyManagement>
@@ -60,18 +66,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- JMH for performance profiling -->
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-core</artifactId>
-      <version>1.37</version>
-    </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-generator-annprocess</artifactId>
-      <version>1.37</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -213,6 +207,105 @@
                 <option>--enable-preview</option>
               </options>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- JMH Profile -->
+    <profile>
+      <id>jmh</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-core</artifactId>
+          <version>${jmh.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-generator-annprocess</artifactId>
+          <version>${jmh.version}</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <!-- Add benchmark source directory -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${maven-plugin-build-helper.version}</version>
+            <executions>
+              <execution>
+                <id>add-jmh-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/jmh/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Compile JMH benchmarks -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven-plugin-compiler.version}</version>
+            <configuration>
+              <release>${java.version}</release>
+              <enablePreview>true</enablePreview>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.openjdk.jmh</groupId>
+                  <artifactId>jmh-generator-annprocess</artifactId>
+                  <version>${jmh.version}</version>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </plugin>
+
+          <!-- Create executable benchmark JAR -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven-plugin-shade.version}</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <finalName>jmh-benchmarks</finalName>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                      <mainClass>org.openjdk.jmh.Main</mainClass>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                  </transformers>
+                  <filters>
+                    <filter>
+                      <!-- Exclude signatures -->
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                        <exclude>META-INF/MANIFEST.MF</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
