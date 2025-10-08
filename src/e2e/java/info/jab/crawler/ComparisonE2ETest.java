@@ -35,12 +35,13 @@ class ComparisonE2ETest {
     @Test
     @DisplayName("E2E: All crawlers should return the same number of pages")
     void testAllCrawlersReturnSamePageCount() {
-        // Given - Create all three crawler types with identical configuration
+        // Given - Create all four crawler types with identical configuration
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
+        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
 
-        // When - Crawl the same URL with all three crawlers
+        // When - Crawl the same URL with all four crawlers
         System.out.println("\n=== Crawling with SequentialCrawler ===");
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         System.out.println(sequentialResult);
@@ -53,17 +54,24 @@ class ComparisonE2ETest {
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
         System.out.println(recursiveResult);
 
+        System.out.println("\n=== Crawling with MultiThreadedRecursiveCrawler ===");
+        CrawlResult multiThreadedRecursiveResult = multiThreadedRecursiveCrawler.crawl(TARGET_URL);
+        System.out.println(multiThreadedRecursiveResult);
+
         // Then - All crawlers should return the same number of pages
         System.out.println("\n=== Comparison Results ===");
-        System.out.printf("Sequential:        %d pages, %d failures%n",
+        System.out.printf("Sequential:                %d pages, %d failures%n",
             sequentialResult.getTotalPagesCrawled(),
             sequentialResult.getTotalFailures());
-        System.out.printf("ProducerConsumer:  %d pages, %d failures%n",
+        System.out.printf("ProducerConsumer:          %d pages, %d failures%n",
             producerConsumerResult.getTotalPagesCrawled(),
             producerConsumerResult.getTotalFailures());
-        System.out.printf("Recursive:         %d pages, %d failures%n",
+        System.out.printf("Recursive:                 %d pages, %d failures%n",
             recursiveResult.getTotalPagesCrawled(),
             recursiveResult.getTotalFailures());
+        System.out.printf("MultiThreadedRecursive:    %d pages, %d failures%n",
+            multiThreadedRecursiveResult.getTotalPagesCrawled(),
+            multiThreadedRecursiveResult.getTotalFailures());
 
         assertThat(sequentialResult.getTotalPagesCrawled())
             .as("Sequential and ProducerConsumer should crawl same number of pages")
@@ -73,9 +81,21 @@ class ComparisonE2ETest {
             .as("Sequential and Recursive should crawl same number of pages")
             .isEqualTo(recursiveResult.getTotalPagesCrawled());
 
+        assertThat(sequentialResult.getTotalPagesCrawled())
+            .as("Sequential and MultiThreadedRecursive should crawl same number of pages")
+            .isEqualTo(multiThreadedRecursiveResult.getTotalPagesCrawled());
+
         assertThat(producerConsumerResult.getTotalPagesCrawled())
             .as("ProducerConsumer and Recursive should crawl same number of pages")
             .isEqualTo(recursiveResult.getTotalPagesCrawled());
+
+        assertThat(producerConsumerResult.getTotalPagesCrawled())
+            .as("ProducerConsumer and MultiThreadedRecursive should crawl same number of pages")
+            .isEqualTo(multiThreadedRecursiveResult.getTotalPagesCrawled());
+
+        assertThat(recursiveResult.getTotalPagesCrawled())
+            .as("Recursive and MultiThreadedRecursive should crawl same number of pages")
+            .isEqualTo(multiThreadedRecursiveResult.getTotalPagesCrawled());
 
         // All should crawl at least one page
         assertThat(sequentialResult.getTotalPagesCrawled())
@@ -282,17 +302,20 @@ class ComparisonE2ETest {
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
+        Crawler multiThreadedRecursiveCrawler = createCrawler(CrawlerType.MULTI_THREADED_RECURSIVE);
 
         // When - Measure execution time for each crawler
         long sequentialTime = measureCrawlTime(sequentialCrawler, TARGET_URL);
         long producerConsumerTime = measureCrawlTime(producerConsumerCrawler, TARGET_URL);
         long recursiveTime = measureCrawlTime(recursiveCrawler, TARGET_URL);
+        long multiThreadedRecursiveTime = measureCrawlTime(multiThreadedRecursiveCrawler, TARGET_URL);
 
         // Then - Display performance comparison
         System.out.println("\n=== Performance Comparison ===");
-        System.out.printf("Sequential:        %d ms%n", sequentialTime);
-        System.out.printf("ProducerConsumer:  %d ms%n", producerConsumerTime);
-        System.out.printf("Recursive:         %d ms%n", recursiveTime);
+        System.out.printf("Sequential:                %d ms%n", sequentialTime);
+        System.out.printf("ProducerConsumer:          %d ms%n", producerConsumerTime);
+        System.out.printf("Recursive:                 %d ms%n", recursiveTime);
+        System.out.printf("MultiThreadedRecursive:    %d ms%n", multiThreadedRecursiveTime);
 
         // All should complete within reasonable time (60 seconds)
         assertThat(sequentialTime)
@@ -307,15 +330,21 @@ class ComparisonE2ETest {
             .as("Recursive should complete in reasonable time")
             .isLessThan(60000);
 
-        // ProducerConsumer should generally be faster due to parallel processing
+        assertThat(multiThreadedRecursiveTime)
+            .as("MultiThreadedRecursive should complete in reasonable time")
+            .isLessThan(60000);
+
+        // Performance analysis
         System.out.printf("ProducerConsumer speedup: %.2fx%n", (double) sequentialTime / producerConsumerTime);
+        System.out.printf("MultiThreadedRecursive speedup: %.2fx%n", (double) sequentialTime / multiThreadedRecursiveTime);
+        System.out.printf("MultiThreadedRecursive vs Recursive: %.2fx%n", (double) recursiveTime / multiThreadedRecursiveTime);
     }
 
     /**
      * Helper method to create a crawler with standard configuration.
      */
     private Crawler createCrawler(CrawlerType type) {
-        if (type == CrawlerType.PRODUCER_CONSUMER) {
+        if (type == CrawlerType.PRODUCER_CONSUMER || type == CrawlerType.MULTI_THREADED_RECURSIVE) {
             return new DefaultCrawlerBuilder()
                 .crawlerType(type)
                 .maxDepth(MAX_DEPTH)

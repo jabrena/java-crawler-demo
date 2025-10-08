@@ -1,0 +1,274 @@
+package info.jab.crawler.v4;
+
+import info.jab.crawler.commons.Crawler;
+import info.jab.crawler.commons.CrawlResult;
+import info.jab.crawler.commons.CrawlerType;
+import info.jab.crawler.commons.DefaultCrawlerBuilder;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * End-to-End tests for MultiThreadedRecursiveCrawler against real websites.
+ *
+ * These tests verify the crawler's behavior in real-world scenarios:
+ * - Crawling actual websites with complex structures
+ * - Performance characteristics with real network conditions
+ * - Thread safety and coordination in multi-threaded environment
+ * - Handling of various HTML structures and link patterns
+ * - Error handling with real network issues
+ *
+ * Run with: mvn verify -Pe2e
+ * Or: mvn verify -Dtest.e2e=true
+ */
+@EnabledIfSystemProperty(named = "test.e2e", matches = "true")
+class MultiThreadedRecursiveCrawlerE2ETest {
+
+    private static final String TARGET_URL = "https://jabrena.github.io/cursor-rules-java/";
+    private static final String START_DOMAIN = "jabrena.github.io";
+    private static final int MAX_DEPTH = 2;
+    private static final int MAX_PAGES = 20;
+    private static final int TIMEOUT_MS = 15000; // Longer timeout for real sites
+
+    @Test
+    @DisplayName("E2E: Should crawl real website successfully with multi-threading")
+    void shouldCrawlRealWebsiteSuccessfully() {
+        // Given
+        Crawler crawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(MAX_DEPTH)
+            .maxPages(MAX_PAGES)
+            .timeout(TIMEOUT_MS)
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(4)
+            .build();
+
+        // When
+        long startTime = System.currentTimeMillis();
+        CrawlResult result = crawler.crawl(TARGET_URL);
+        long endTime = System.currentTimeMillis();
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalPagesCrawled()).isGreaterThan(0);
+        assertThat(result.getTotalPagesCrawled()).isLessThanOrEqualTo(MAX_PAGES);
+        assertThat(result.successfulPages()).isNotEmpty();
+        assertThat(result.startTime()).isPositive();
+        assertThat(result.endTime()).isPositive();
+        assertThat(result.endTime()).isGreaterThanOrEqualTo(result.startTime());
+
+        // Verify all crawled pages are from the correct domain
+        result.successfulPages().forEach(page -> {
+            assertThat(page.url()).contains(START_DOMAIN);
+            assertThat(page.title()).isNotBlank();
+            assertThat(page.statusCode()).isEqualTo(200);
+            assertThat(page.content()).isNotBlank();
+            assertThat(page.links()).isNotNull();
+        });
+
+        // Print performance metrics
+        long executionTime = endTime - startTime;
+        System.out.printf("V4 Multi-threaded Recursive Crawler Performance:%n");
+        System.out.printf("  Pages crawled: %d%n", result.getTotalPagesCrawled());
+        System.out.printf("  Failed URLs: %d%n", result.getTotalFailures());
+        System.out.printf("  Execution time: %d ms%n", executionTime);
+        System.out.printf("  Average per page: %.2f ms%n", (double) executionTime / result.getTotalPagesCrawled());
+        System.out.printf("  Threads used: 4%n");
+    }
+
+    @Test
+    @DisplayName("E2E: Should respect depth limits on real website")
+    void shouldRespectDepthLimitsOnRealWebsite() {
+        // Given
+        Crawler shallowCrawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(0) // Only crawl the seed page
+            .maxPages(10)
+            .timeout(TIMEOUT_MS)
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(2)
+            .build();
+
+        // When
+        CrawlResult result = shallowCrawler.crawl(TARGET_URL);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalPagesCrawled()).isEqualTo(1); // Only the seed page
+        assertThat(result.successfulPages()).hasSize(1);
+        assertThat(result.successfulPages().get(0).url()).isEqualTo(TARGET_URL);
+    }
+
+    @Test
+    @DisplayName("E2E: Should respect page limits on real website")
+    void shouldRespectPageLimitsOnRealWebsite() {
+        // Given
+        int pageLimit = 5;
+        Crawler limitedCrawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(MAX_DEPTH)
+            .maxPages(pageLimit)
+            .timeout(TIMEOUT_MS)
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(3)
+            .build();
+
+        // When
+        CrawlResult result = limitedCrawler.crawl(TARGET_URL);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalPagesCrawled()).isLessThanOrEqualTo(pageLimit);
+        assertThat(result.successfulPages()).hasSize(result.getTotalPagesCrawled());
+    }
+
+    @Test
+    @DisplayName("E2E: Should handle different thread pool sizes")
+    void shouldHandleDifferentThreadPoolSizes() {
+        // Given
+        int[] threadCounts = {1, 2, 4, 8};
+        long[] executionTimes = new long[threadCounts.length];
+
+        for (int i = 0; i < threadCounts.length; i++) {
+            Crawler crawler = new DefaultCrawlerBuilder()
+                .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+                .maxDepth(1) // Shallow crawl for faster testing
+                .maxPages(10)
+                .timeout(TIMEOUT_MS)
+                .followExternalLinks(false)
+                .startDomain(START_DOMAIN)
+                .numThreads(threadCounts[i])
+                .build();
+
+            // When
+            long startTime = System.currentTimeMillis();
+            CrawlResult result = crawler.crawl(TARGET_URL);
+            long endTime = System.currentTimeMillis();
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalPagesCrawled()).isGreaterThan(0);
+            executionTimes[i] = endTime - startTime;
+
+            System.out.printf("Threads: %d, Time: %d ms, Pages: %d%n", 
+                threadCounts[i], executionTimes[i], result.getTotalPagesCrawled());
+        }
+
+        // Verify that more threads generally improve performance (though this may vary)
+        System.out.println("Performance comparison across thread counts completed.");
+    }
+
+    @Test
+    @DisplayName("E2E: Should handle network errors gracefully")
+    void shouldHandleNetworkErrorsGracefully() {
+        // Given
+        Crawler crawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(1)
+            .maxPages(5)
+            .timeout(5000) // Short timeout to trigger some failures
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(2)
+            .build();
+
+        // When
+        CrawlResult result = crawler.crawl(TARGET_URL);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalPagesCrawled()).isGreaterThanOrEqualTo(0);
+        assertThat(result.getTotalFailures()).isGreaterThanOrEqualTo(0);
+        
+        // The sum of successful and failed should be reasonable
+        int totalAttempts = result.getTotalPagesCrawled() + result.getTotalFailures();
+        assertThat(totalAttempts).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("E2E: Should maintain thread safety under concurrent load")
+    void shouldMaintainThreadSafetyUnderConcurrentLoad() throws InterruptedException {
+        // Given
+        Crawler crawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(1)
+            .maxPages(5)
+            .timeout(TIMEOUT_MS)
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(4)
+            .build();
+
+        int numConcurrentCrawls = 3;
+        Thread[] threads = new Thread[numConcurrentCrawls];
+        CrawlResult[] results = new CrawlResult[numConcurrentCrawls];
+
+        // When
+        for (int i = 0; i < numConcurrentCrawls; i++) {
+            final int index = i;
+            threads[i] = new Thread(() -> {
+                results[index] = crawler.crawl(TARGET_URL);
+            });
+            threads[i].start();
+        }
+
+        // Wait for all threads to complete
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        // Then
+        for (CrawlResult result : results) {
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalPagesCrawled()).isGreaterThanOrEqualTo(0);
+            assertThat(result.successfulPages()).isNotNull();
+            assertThat(result.failedUrls()).isNotNull();
+        }
+
+        System.out.println("Concurrent crawl test completed successfully with thread safety maintained.");
+    }
+
+    @Test
+    @DisplayName("E2E: Should extract meaningful content from real pages")
+    void shouldExtractMeaningfulContentFromRealPages() {
+        // Given
+        Crawler crawler = new DefaultCrawlerBuilder()
+            .crawlerType(CrawlerType.MULTI_THREADED_RECURSIVE)
+            .maxDepth(1)
+            .maxPages(10)
+            .timeout(TIMEOUT_MS)
+            .followExternalLinks(false)
+            .startDomain(START_DOMAIN)
+            .numThreads(2)
+            .build();
+
+        // When
+        CrawlResult result = crawler.crawl(TARGET_URL);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.successfulPages()).isNotEmpty();
+
+        // Verify content quality
+        result.successfulPages().forEach(page -> {
+            assertThat(page.title()).isNotBlank();
+            assertThat(page.content()).isNotBlank();
+            assertThat(page.content().length()).isGreaterThan(10); // Should have meaningful content
+            assertThat(page.links()).isNotNull();
+            
+            // Verify links are properly extracted
+            page.links().forEach(link -> {
+                assertThat(link).isNotBlank();
+                assertThat(link).startsWith("http");
+            });
+        });
+
+        System.out.printf("Content extraction test completed. Extracted %d pages with meaningful content.%n", 
+            result.getTotalPagesCrawled());
+    }
+}

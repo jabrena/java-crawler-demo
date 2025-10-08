@@ -4,6 +4,7 @@ import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.DefaultCrawlerBuilder;
 import info.jab.crawler.commons.CrawlerType;
+import info.jab.crawler.commons.Trampoline;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

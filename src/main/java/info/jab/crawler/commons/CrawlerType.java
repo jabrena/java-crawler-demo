@@ -24,7 +24,14 @@ public enum CrawlerType {
      * Recursive crawler implementation.
      * Uses recursive approach with trampoline pattern for safe deep recursion.
      */
-    RECURSIVE;
+    RECURSIVE,
+
+    /**
+     * Multi-threaded recursive crawler implementation.
+     * Combines multi-threading with recursive design using trampoline pattern.
+     * Provides parallel performance with stack-safe deep recursion.
+     */
+    MULTI_THREADED_RECURSIVE;
 
     /**
      * Creates a new builder instance for the selected crawler type.
