@@ -22,7 +22,7 @@ jobs:
         run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml
         env:
           MAVEN_OPTS: "--enable-preview"
-      - name: Maven integration tests
+      - name: Maven E2E tests
         run: ./mvnw --batch-mode --no-transfer-progress verify -Pe2e --file pom.xml
         env:
           MAVEN_OPTS: "--enable-preview"
