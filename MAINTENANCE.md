@@ -6,4 +6,11 @@ develop a version with "Actor model" of web crawler using the same building bloc
 @171-java-diagrams.md create a high level sequence diagram without any question. @ProducerConsumerCrawlerExample.java in the same style than previous one: @sequential-crawler-overview.puml and put the diagram in @docs/
 
 Update @docs/README.md with a an analysis in the same format & structure than for @ProducerConsumerCrawlerExample.java but in this case for the missing Crawlers. Review the current document and later review the different version @v1/ @SequentialCrawler.java @v2/ @v3/ @v4/ @v5/ @v6/ @v7/ is mising
+
+Create a version of V5 but using virtual threads replacing Completable Future. In that implementation add unit tests, integration tests, e2e tests and one example, review previous implementations to do something similar. Update the JMH with the new case. Update README with the execution of the Example.
+Verify changes with:
+
+./mvnw clean test
+./mvnw clean verify
+./mvnw clean verify -Pe2e
 ```

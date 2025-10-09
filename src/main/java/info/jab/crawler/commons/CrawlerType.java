@@ -71,7 +71,17 @@ public enum CrawlerType {
      * Provides automatic resource cleanup, better error handling, and virtual threads
      * while maintaining the proven producer-consumer pattern from v4.
      */
-    STRUCTURED_WORKER;
+    STRUCTURED_WORKER,
+
+    /**
+     * Virtual thread actor model crawler implementation.
+     * Modernized version of V5 ActorCrawler using virtual threads instead of CompletableFuture.
+     * Maintains the actor model pattern with supervisor-worker architecture while leveraging
+     * Java's lightweight threading capabilities for simplified async processing.
+     * Provides fault tolerance, message passing, and parallel processing with better
+     * resource utilization and easier debugging compared to CompletableFuture-based approaches.
+     */
+    VIRTUAL_THREAD_ACTOR;
 
     /**
      * Creates a new builder instance for the selected crawler type.

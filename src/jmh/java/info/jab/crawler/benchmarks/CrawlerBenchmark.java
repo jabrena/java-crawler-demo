@@ -37,13 +37,14 @@ import java.util.regex.Pattern;
  * 6. Recursive Actor Crawler (v6)
  * 7. Structural Concurrency Crawler (v7)
  * 8. Hybrid Actor-Structural Crawler (v8)
+ * 9. Virtual Thread Actor Crawler (v10)
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-@Fork(value = 1, jvmArgs = {"-Xms1G", "-Xmx2G", "--enable-preview"})
+@Fork(value = 2, jvmArgs = {"-Xms1G", "-Xmx2G", "--enable-preview"})
 @Warmup(iterations = 2)
-@Measurement(iterations = 3)
+@Measurement(iterations = 5)
 public class CrawlerBenchmark {
 
     // Test URL: Cursor Rules for Java website
@@ -165,6 +166,18 @@ public class CrawlerBenchmark {
         return crawler.crawl(TEST_URL);
     }
 
+    @Benchmark
+    public CrawlResult benchmarkVirtualThreadActorCrawler() {
+        Crawler crawler = CrawlerType.VIRTUAL_THREAD_ACTOR.createWith(builder ->
+            builder.maxDepth(MAX_DEPTH)
+                   .maxPages(MAX_PAGES)
+                   .timeout(TIMEOUT_MS)
+                   .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
+                   .numThreads(NUM_THREADS)
+        );
+        return crawler.crawl(TEST_URL);
+    }
+
     // ============================================================================
     // UTILITY METHODS
     // ============================================================================
@@ -185,7 +198,8 @@ public class CrawlerBenchmark {
                 type == CrawlerType.ACTOR ||
                 type == CrawlerType.RECURSIVE_ACTOR ||
                 type == CrawlerType.HYBRID_ACTOR_STRUCTURAL ||
-                type == CrawlerType.STRUCTURED_WORKER) {
+                type == CrawlerType.STRUCTURED_WORKER ||
+                type == CrawlerType.VIRTUAL_THREAD_ACTOR) {
                 builder.numThreads(NUM_THREADS);
             }
         });
