@@ -108,7 +108,7 @@ public class SupervisorActor {
 
         // Initialize with seed URL
         if (seedUrl != null && !seedUrl.isEmpty()) {
-            String normalizedUrl = normalizeUrl(seedUrl);
+            String normalizedUrl = Page.normalizeUrl(seedUrl);
             if (visitedUrls.putIfAbsent(normalizedUrl, true) == null) {
                 urlQueue.offer(new CrawlMessage(seedUrl, 0));
                 pendingMessages.incrementAndGet();
@@ -211,7 +211,7 @@ public class SupervisorActor {
             resultMsg.newLinks().stream()
                 .filter(this::shouldFollowLink)
                 .filter(link -> {
-                    String normalized = normalizeUrl(link);
+                    String normalized = Page.normalizeUrl(link);
                     return visitedUrls.putIfAbsent(normalized, true) == null;
                 })
                 .forEach(link -> {
@@ -298,26 +298,6 @@ public class SupervisorActor {
         return url.contains(startDomain);
     }
 
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        if (url == null || url.isEmpty()) {
-            return url;
-        }
-
-        int hashIndex = url.indexOf('#');
-        if (hashIndex != -1) {
-            url = url.substring(0, hashIndex);
-        }
-        if (url.endsWith("/") && url.length() > 1) {
-            url = url.substring(0, url.length() - 1);
-        }
-        return url;
-    }
 
     /**
      * Shuts down the supervisor and all worker actors.
