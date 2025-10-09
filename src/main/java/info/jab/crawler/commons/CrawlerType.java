@@ -81,7 +81,20 @@ public enum CrawlerType {
      * Provides fault tolerance, message passing, and parallel processing with better
      * resource utilization and easier debugging compared to CompletableFuture-based approaches.
      */
-    VIRTUAL_THREAD_ACTOR;
+    VIRTUAL_THREAD_ACTOR,
+
+    /**
+     * Improved structured concurrency crawler implementation (v11).
+     * Addresses SoftwareMill critique of JEP 505 Structured Concurrency:
+     * - Uniform cancellation: scope body participates in error handling like subtasks
+     * - Unified scope logic: no split between Joiner implementation and scope body
+     * - Timeout as method: lightweight timeout pattern without configuration parameter
+     * - Custom Joiner with race semantics for better control over completion logic
+     *
+     * This implementation demonstrates how to overcome the limitations identified
+     * in the SoftwareMill article while maintaining the benefits of structured concurrency.
+     */
+    IMPROVED_STRUCTURED_CONCURRENCY;
 
     /**
      * Creates a new builder instance for the selected crawler type.

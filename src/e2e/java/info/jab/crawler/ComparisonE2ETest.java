@@ -49,6 +49,7 @@ class ComparisonE2ETest {
         Crawler recursiveActorCrawler = createCrawler(CrawlerType.RECURSIVE_ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
         Crawler structuredWorkerCrawler = createCrawler(CrawlerType.STRUCTURED_WORKER);
+        Crawler improvedStructuredCrawler = createCrawler(CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY);
 
         // When - Crawl the same URL with all seven crawlers
         System.out.println("\n=== Crawling with SequentialCrawler ===");
@@ -83,6 +84,10 @@ class ComparisonE2ETest {
         CrawlResult structuredWorkerResult = structuredWorkerCrawler.crawl(TARGET_URL);
         System.out.println(structuredWorkerResult);
 
+        System.out.println("\n=== Crawling with ImprovedStructuredCrawler ===");
+        CrawlResult improvedStructuredResult = improvedStructuredCrawler.crawl(TARGET_URL);
+        System.out.println(improvedStructuredResult);
+
         // Then - All crawlers should return the same number of pages
         System.out.println("\n=== Comparison Results ===");
         System.out.printf("Sequential:                %d pages, %d failures%n",
@@ -109,6 +114,9 @@ class ComparisonE2ETest {
         System.out.printf("StructuredWorker:          %d pages, %d failures%n",
             structuredWorkerResult.getTotalPagesCrawled(),
             structuredWorkerResult.getTotalFailures());
+        System.out.printf("ImprovedStructured:        %d pages, %d failures%n",
+            improvedStructuredResult.getTotalPagesCrawled(),
+            improvedStructuredResult.getTotalFailures());
 
         // Verify all crawlers return consistent page counts
         assertThat(sequentialResult.getTotalPagesCrawled())
@@ -203,6 +211,16 @@ class ComparisonE2ETest {
             .as("StructuredWorker should crawl at least as many pages as Actor")
             .isGreaterThanOrEqualTo(actorResult.getTotalPagesCrawled() / 2);
 
+        // Note: ImprovedStructured may crawl more pages due to concurrent nature
+        // so we only check that it crawls at least as many as the others
+        assertThat(improvedStructuredResult.getTotalPagesCrawled())
+            .as("ImprovedStructured should crawl at least as many pages as other crawlers")
+            .isGreaterThanOrEqualTo(sequentialResult.getTotalPagesCrawled());
+
+        assertThat(improvedStructuredResult.getTotalPagesCrawled())
+            .as("ImprovedStructured should crawl reasonable number of pages")
+            .isGreaterThanOrEqualTo(5);
+
         // All should crawl at least one page
         assertThat(sequentialResult.getTotalPagesCrawled())
             .as("All crawlers should crawl at least one page")
@@ -213,21 +231,23 @@ class ComparisonE2ETest {
     @Timeout(120)
     @DisplayName("E2E: All crawler implementations should discover identical URL sets when given same configuration")
     void should_discoverIdenticalUrlSets_when_allCrawlersUseSameConfiguration() {
-        // Given - Create all six crawler types with identical configuration
+        // Given - Create all seven crawler types with identical configuration
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
         Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
+        Crawler improvedStructuredCrawler = createCrawler(CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY);
 
-        // When - Crawl the same URL with all six crawlers
+        // When - Crawl the same URL with all seven crawlers
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
         CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
+        CrawlResult improvedStructuredResult = improvedStructuredCrawler.crawl(TARGET_URL);
 
         // Extract URLs from each result
         Set<String> sequentialUrls = sequentialResult.successfulPages().stream()
@@ -254,6 +274,10 @@ class ComparisonE2ETest {
             .map(page -> page.url())
             .collect(Collectors.toSet());
 
+        Set<String> improvedStructuredUrls = improvedStructuredResult.successfulPages().stream()
+            .map(page -> page.url())
+            .collect(Collectors.toSet());
+
         // Then - All crawlers should discover the same URLs
         System.out.println("\n=== URL Comparison ===");
         System.out.println("Sequential URLs: " + sequentialUrls.size());
@@ -262,6 +286,7 @@ class ComparisonE2ETest {
         System.out.println("MultiThreadedRecursive URLs: " + multiThreadedRecursiveUrls.size());
         System.out.println("Actor URLs: " + actorUrls.size());
         System.out.println("StructuralConcurrency URLs: " + structuralConcurrencyUrls.size());
+        System.out.println("ImprovedStructured URLs: " + improvedStructuredUrls.size());
 
         // Verify that all crawlers discover a reasonable number of URLs
         assertThat(sequentialUrls)
@@ -294,6 +319,11 @@ class ComparisonE2ETest {
             .hasSizeGreaterThanOrEqualTo(5)
             .hasSizeLessThanOrEqualTo(50); // Allow more for concurrent nature
 
+        assertThat(improvedStructuredUrls)
+            .as("ImprovedStructured crawler should discover reasonable number of URLs")
+            .hasSizeGreaterThanOrEqualTo(5)
+            .hasSizeLessThanOrEqualTo(50); // Allow more for concurrent nature
+
         // Verify that all crawlers discover the home page
         assertThat(sequentialUrls)
             .as("Sequential crawler should discover the home page")
@@ -318,27 +348,33 @@ class ComparisonE2ETest {
         assertThat(structuralConcurrencyUrls)
             .as("StructuralConcurrency crawler should discover the home page")
             .anyMatch(url -> url.equals(TARGET_URL) || url.equals(TARGET_URL + "index.html"));
+
+        assertThat(improvedStructuredUrls)
+            .as("ImprovedStructured crawler should discover the home page")
+            .anyMatch(url -> url.equals(TARGET_URL) || url.equals(TARGET_URL + "index.html"));
     }
 
     @Test
     @Timeout(120)
     @DisplayName("E2E: All crawler implementations should have consistent failure rates when given same configuration")
     void should_haveConsistentFailureRates_when_allCrawlersUseSameConfiguration() {
-        // Given - Create all six crawler types with identical configuration
+        // Given - Create all seven crawler types with identical configuration
         Crawler sequentialCrawler = createCrawler(CrawlerType.SEQUENTIAL);
         Crawler producerConsumerCrawler = createCrawler(CrawlerType.PRODUCER_CONSUMER);
         Crawler recursiveCrawler = createCrawler(CrawlerType.RECURSIVE);
         Crawler multiThreadedIterativeCrawler = createCrawler(CrawlerType.MULTI_THREADED_ITERATIVE);
         Crawler actorCrawler = createCrawler(CrawlerType.ACTOR);
         Crawler structuralConcurrencyCrawler = createCrawler(CrawlerType.STRUCTURAL_CONCURRENCY);
+        Crawler improvedStructuredCrawler = createCrawler(CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY);
 
-        // When - Crawl the same URL with all six crawlers
+        // When - Crawl the same URL with all seven crawlers
         CrawlResult sequentialResult = sequentialCrawler.crawl(TARGET_URL);
         CrawlResult producerConsumerResult = producerConsumerCrawler.crawl(TARGET_URL);
         CrawlResult recursiveResult = recursiveCrawler.crawl(TARGET_URL);
         CrawlResult multiThreadedRecursiveResult = multiThreadedIterativeCrawler.crawl(TARGET_URL);
         CrawlResult actorResult = actorCrawler.crawl(TARGET_URL);
         CrawlResult structuralConcurrencyResult = structuralConcurrencyCrawler.crawl(TARGET_URL);
+        CrawlResult improvedStructuredResult = improvedStructuredCrawler.crawl(TARGET_URL);
 
         // Then - All crawlers should have similar failure counts
         // (exact match is not guaranteed due to timing and network variability)
@@ -349,6 +385,7 @@ class ComparisonE2ETest {
         System.out.println("MultiThreadedRecursive failures: " + multiThreadedRecursiveResult.getTotalFailures());
         System.out.println("Actor failures: " + actorResult.getTotalFailures());
         System.out.println("StructuralConcurrency failures: " + structuralConcurrencyResult.getTotalFailures());
+        System.out.println("ImprovedStructured failures: " + improvedStructuredResult.getTotalFailures());
 
         // Failures should be within reasonable range (allowing for some variability)
         int maxFailures = Math.max(
@@ -356,7 +393,8 @@ class ComparisonE2ETest {
                 Math.max(sequentialResult.getTotalFailures(), producerConsumerResult.getTotalFailures()),
                 Math.max(recursiveResult.getTotalFailures(), multiThreadedRecursiveResult.getTotalFailures())
             ),
-            Math.max(actorResult.getTotalFailures(), structuralConcurrencyResult.getTotalFailures())
+            Math.max(actorResult.getTotalFailures(),
+                Math.max(structuralConcurrencyResult.getTotalFailures(), improvedStructuredResult.getTotalFailures()))
         );
 
         int minFailures = Math.min(
@@ -364,7 +402,8 @@ class ComparisonE2ETest {
                 Math.min(sequentialResult.getTotalFailures(), producerConsumerResult.getTotalFailures()),
                 Math.min(recursiveResult.getTotalFailures(), multiThreadedRecursiveResult.getTotalFailures())
             ),
-            Math.min(actorResult.getTotalFailures(), structuralConcurrencyResult.getTotalFailures())
+            Math.min(actorResult.getTotalFailures(),
+                Math.min(structuralConcurrencyResult.getTotalFailures(), improvedStructuredResult.getTotalFailures()))
         );
 
         // Allow up to 2 failures difference due to network timing
@@ -707,6 +746,7 @@ class ComparisonE2ETest {
                 crawlerType == CrawlerType.RECURSIVE_ACTOR ? MAX_PAGES * 4 :
                 crawlerType == CrawlerType.STRUCTURAL_CONCURRENCY ? MAX_PAGES * 5 :
                 crawlerType == CrawlerType.HYBRID_ACTOR_STRUCTURAL ? MAX_PAGES * 5 :
+                crawlerType == CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY ? MAX_PAGES * 5 :
                 MAX_PAGES
             ); // Allow margin for concurrent crawlers
 
@@ -833,7 +873,8 @@ class ComparisonE2ETest {
             .hasSizeLessThanOrEqualTo(
                 (crawlerType == CrawlerType.RECURSIVE_ACTOR ||
                  crawlerType == CrawlerType.STRUCTURAL_CONCURRENCY ||
-                 crawlerType == CrawlerType.HYBRID_ACTOR_STRUCTURAL) ? 50 : 20
+                 crawlerType == CrawlerType.HYBRID_ACTOR_STRUCTURAL ||
+                 crawlerType == CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY) ? 50 : 20
             ); // Allow more for concurrent crawlers
 
         assertThat(urls)

@@ -37,7 +37,9 @@ import java.util.regex.Pattern;
  * 6. Recursive Actor Crawler (v6)
  * 7. Structural Concurrency Crawler (v7)
  * 8. Hybrid Actor-Structural Crawler (v8)
- * 9. Virtual Thread Actor Crawler (v10)
+ * 9. Structured Worker Crawler (v9)
+ * 10. Virtual Thread Actor Crawler (v10)
+ * 11. Improved Structured Concurrency Crawler (v11)
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -174,6 +176,17 @@ public class CrawlerBenchmark {
                    .timeout(TIMEOUT_MS)
                    .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
                    .numThreads(NUM_THREADS)
+        );
+        return crawler.crawl(TEST_URL);
+    }
+
+    @Benchmark
+    public CrawlResult benchmarkImprovedStructuredConcurrencyCrawler() {
+        Crawler crawler = CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY.createWith(builder ->
+            builder.maxDepth(MAX_DEPTH)
+                   .maxPages(MAX_PAGES)
+                   .timeout(TIMEOUT_MS)
+                   .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
         );
         return crawler.crawl(TEST_URL);
     }

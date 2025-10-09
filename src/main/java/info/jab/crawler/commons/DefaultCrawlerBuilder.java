@@ -144,6 +144,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case VIRTUAL_THREAD_ACTOR -> new info.jab.crawler.v10.VirtualThreadActorCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
             );
+            case IMPROVED_STRUCTURED_CONCURRENCY -> new info.jab.crawler.v11.ImprovedStructuredCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
+            );
         };
     }
 }

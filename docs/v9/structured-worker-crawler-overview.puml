@@ -1,0 +1,144 @@
+@startuml
+!theme plain
+title Structured Worker Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "StructuredWorkerCrawler" as Crawler
+participant "StructuredTaskScope" as Scope
+participant "BlockingQueue<UrlDepthPair>" as Queue
+participant "Worker Task 1" as Worker1
+participant "Worker Task 2" as Worker2
+participant "Worker Task N" as WorkerN
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.numThreads(4)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> Queue: Initialize with seed URL
+activate Queue
+Crawler -> Scope: StructuredTaskScope.open()
+activate Scope
+
+== Structured Worker Processing ==
+loop Create worker tasks
+Crawler -> Scope: scope.fork(() -> workerTask)
+activate Scope
+
+Scope -> Worker1: Start worker task
+activate Worker1
+Scope -> Worker2: Start worker task
+activate Worker2
+Scope -> WorkerN: Start worker task
+activate WorkerN
+end
+
+loop Until queue empty and no active workers
+
+Worker1 -> Queue: poll(timeout)
+Queue --> Worker1: UrlDepthPair(url, depth)
+
+Worker1 -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Worker1: HTML Document
+deactivate Jsoup
+
+Worker1 -> Worker1: Extract title, content, links
+Worker1 -> Result: Add successful page
+activate Result
+Result --> Worker1: Updated result
+deactivate Result
+
+Worker1 -> Queue: Offer new links\n(if depth < maxDepth)
+
+|||||
+
+Worker2 -> Queue: poll(timeout)
+Queue --> Worker2: UrlDepthPair(url, depth)
+
+Worker2 -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Worker2: HTML Document
+deactivate Jsoup
+
+Worker2 -> Worker2: Extract title, content, links
+Worker2 -> Result: Add successful page
+activate Result
+Result --> Worker2: Updated result
+deactivate Result
+
+Worker2 -> Queue: Offer new links\n(if depth < maxDepth)
+
+|||||
+
+WorkerN -> Queue: poll(timeout)
+Queue --> WorkerN: UrlDepthPair(url, depth)
+
+WorkerN -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> WorkerN: HTML Document
+deactivate Jsoup
+
+WorkerN -> WorkerN: Extract title, content, links
+WorkerN -> Result: Add successful page
+activate Result
+Result --> WorkerN: Updated result
+deactivate Result
+
+WorkerN -> Queue: Offer new links\n(if depth < maxDepth)
+
+end
+
+Crawler -> Scope: scope.join()
+activate Scope
+Scope --> Crawler: All worker tasks completed
+deactivate Scope
+Scope --> Crawler: Automatic cleanup
+deactivate Scope
+deactivate Queue
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Duration and throughput
+end note
+
+note left of Crawler
+  Structured Worker Features:
+  - BlockingQueue + worker pattern coordination
+  - StructuredTaskScope for automatic resource management
+  - Virtual threads for efficient concurrency
+  - Automatic cancellation and cleanup
+  - No ExecutorService shutdown complexity
+  - No poison pill pattern needed
+  - Better error propagation through scoping
+end note
+
+note left of Scope
+  StructuredTaskScope Benefits:
+  - Automatic resource management
+  - Cancellation propagation
+  - Exception handling and propagation
+  - Virtual thread efficiency
+  - Worker task coordination
+end note
+
+note right of Queue
+  BlockingQueue Coordination:
+  - Thread-safe URL frontier
+  - Workers poll URLs with timeout
+  - Thread-safe add/check for visited URLs
+  - Atomic page counting prevents overflow
+  - Active worker tracking ensures completion
+end note
+
+@enduml
