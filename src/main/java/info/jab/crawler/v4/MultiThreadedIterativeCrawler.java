@@ -4,8 +4,6 @@ import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.UrlDepthPair;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +63,7 @@ public class MultiThreadedIterativeCrawler implements Crawler {
         // Initialize with seed URL at depth 0
         if (seedUrl != null && !seedUrl.isEmpty()) {
             urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-            visitedUrls.put(normalizeUrl(seedUrl), true);
+            visitedUrls.put(Page.normalizeUrl(seedUrl), true);
         } else {
             // Handle invalid seed URL
             if (seedUrl != null) {
@@ -119,17 +117,8 @@ public class MultiThreadedIterativeCrawler implements Crawler {
                         int depth = current.depth();
 
                         try {
-                            // Fetch and parse the page
-                            Document doc = Jsoup.connect(url)
-                                .timeout(timeoutMs)
-                                .userAgent("Mozilla/5.0 (Educational Crawler)")
-                                .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
-                                .get();
-
-                            // Extract information
-                            String title = doc.title();
-                            String content = doc.body().text();
-                            List<String> links = extractLinks(doc);
+                            // Fetch and parse the page using Page.fromUrl
+                            Page page = Page.fromUrl(url, timeoutMs);
 
                             // Only increment if we haven't exceeded the limit
                             int newCount = pagesCrawled.incrementAndGet();
@@ -141,16 +130,15 @@ public class MultiThreadedIterativeCrawler implements Crawler {
                                 break;
                             }
 
-                            // Create Page object and add to results
-                            Page page = new Page(url, title, 200, content, links);
+                            // Add page to results
                             successfulPages.add(page);
 
                             // Add new links to queue if within depth limit
                             if (depth < maxDepth && pagesCrawled.get() < maxPages) {
-                                links.stream()
+                                page.links().stream()
                                     .filter(this::shouldFollowLink)
                                     .filter(link -> {
-                                        String normalized = normalizeUrl(link);
+                                        String normalized = Page.normalizeUrl(link);
                                         return visitedUrls.putIfAbsent(normalized, true) == null; // Thread-safe add and check
                                     })
                                     .forEach(link -> urlQueue.offer(new UrlDepthPair(link, depth + 1)));
@@ -184,19 +172,6 @@ public class MultiThreadedIterativeCrawler implements Crawler {
         return new CrawlResult(successfulPages, failedUrls, startTime, endTime);
     }
 
-    /**
-     * Extracts all absolute links from a document.
-     * Returns an immutable list following functional programming principles.
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .limit(20) // Limit links per page for performance
-            .toList();
-    }
 
     /**
      * Determines if a link should be followed based on crawler configuration.
@@ -208,29 +183,4 @@ public class MultiThreadedIterativeCrawler implements Crawler {
         // Only follow links from the same domain
         return url.contains(startDomain);
     }
-
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        // Handle null or empty URLs
-        if (url == null || url.isEmpty()) {
-            return url;
-        }
-
-        // More efficient normalization
-        int hashIndex = url.indexOf('#');
-        if (hashIndex != -1) {
-            url = url.substring(0, hashIndex);
-        }
-        if (url.endsWith("/") && url.length() > 1) {
-            url = url.substring(0, url.length() - 1);
-        }
-        return url;
-    }
-
 }

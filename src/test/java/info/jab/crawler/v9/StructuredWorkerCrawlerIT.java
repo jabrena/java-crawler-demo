@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for StructuredWorkerCrawler using WireMock.
- * 
+ *
  * Tests the crawler's behavior with mocked HTTP responses to ensure:
  * - Proper HTTP request handling
  * - Link extraction and following
@@ -30,6 +30,9 @@ class StructuredWorkerCrawlerIT {
 
     @BeforeEach
     void setUp() {
+        // Clear page cache to ensure fresh tests
+        Page.clearCache();
+
         wireMockServer = new WireMockServer(8080);
         wireMockServer.start();
         WireMock.configureFor("localhost", 8080);

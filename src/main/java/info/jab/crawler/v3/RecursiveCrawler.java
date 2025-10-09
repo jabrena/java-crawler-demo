@@ -5,13 +5,10 @@ import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.Trampoline;
 import info.jab.crawler.commons.UrlDepthPair;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -56,7 +53,7 @@ public class RecursiveCrawler implements Crawler {
 
         // Initialize with seed URL at depth 0
         urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-        visitedUrls.add(normalizeUrl(seedUrl));
+        visitedUrls.add(Page.normalizeUrl(seedUrl));
 
         CrawlState initialState = new CrawlState(
             CrawlResult.empty(),
@@ -93,28 +90,17 @@ public class RecursiveCrawler implements Crawler {
 
         // Try to fetch the page
         try {
-            Document doc = Jsoup.connect(url)
-                .timeout(timeoutMs)
-                .userAgent("Mozilla/5.0 (Educational Crawler)")
-                .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
-                .get();
-
-            // Extract page information
-            String title = doc.title();
-            String content = doc.body().text();
-            List<String> links = extractLinks(doc);
-
-            // Create page and update result
-            Page page = new Page(url, title, 200, content, links);
+            // Fetch and parse the page using Page.fromUrl
+            Page page = Page.fromUrl(url, timeoutMs);
             CrawlResult newResult = state.result.withSuccessfulPage(page);
 
             // Add new links to queue if within depth limit
             if (depth < maxDepth) {
-                links.stream()
+                page.links().stream()
                     .filter(this::shouldFollowLink)
-                    .filter(link -> !state.visitedUrls.contains(normalizeUrl(link)))
+                    .filter(link -> !state.visitedUrls.contains(Page.normalizeUrl(link)))
                     .forEach(link -> {
-                        state.visitedUrls.add(normalizeUrl(link));
+                        state.visitedUrls.add(Page.normalizeUrl(link));
                         state.urlQueue.offer(new UrlDepthPair(link, depth + 1));
                     });
             }
@@ -144,19 +130,6 @@ public class RecursiveCrawler implements Crawler {
     }
 
     /**
-     * Extracts all absolute links from a document.
-     * Returns an immutable list following functional programming principles.
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .toList();
-    }
-
-    /**
      * Determines if a link should be followed based on crawler configuration.
      */
     private boolean shouldFollowLink(String url) {
@@ -166,26 +139,6 @@ public class RecursiveCrawler implements Crawler {
         // Only follow links from the same domain
         return url.contains(startDomain);
     }
-
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        // More efficient normalization
-        int hashIndex = url.indexOf('#');
-        if (hashIndex != -1) {
-            url = url.substring(0, hashIndex);
-        }
-        if (url.endsWith("/") && url.length() > 1) {
-            url = url.substring(0, url.length() - 1);
-        }
-        return url;
-    }
-
 
     /**
      * Immutable state object for tracking crawl progress.
