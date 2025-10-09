@@ -4,6 +4,7 @@ import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.Trampoline;
+import info.jab.crawler.commons.UrlDepthPair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -185,10 +186,6 @@ public class RecursiveCrawler implements Crawler {
         return url;
     }
 
-    /**
-     * Internal record to track URL and its depth in the crawl tree.
-     */
-    private record UrlDepthPair(String url, int depth) {}
 
     /**
      * Immutable state object for tracking crawl progress.

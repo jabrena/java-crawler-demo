@@ -3,8 +3,7 @@ package info.jab.crawler.v13;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import info.jab.crawler.commons.UrlDepthPair;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,8 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -76,7 +73,7 @@ public class StructuredQueueCrawler implements Crawler {
 
         // Initialize with seed URL at depth 0
         urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-        visitedUrls.add(normalizeUrl(seedUrl));
+        visitedUrls.add(Page.normalizeUrl(seedUrl));
 
         try (var scope = StructuredTaskScope.<Void>open()) {
             // Fork worker tasks
@@ -115,16 +112,8 @@ public class StructuredQueueCrawler implements Crawler {
                             int depth = current.depth();
 
                             try {
-                                // Fetch and parse the page
-                                Document doc = Jsoup.connect(url)
-                                    .timeout(timeoutMs)
-                                    .userAgent("Mozilla/5.0 (Educational Structured Queue Crawler)")
-                                    .get();
-
-                                // Extract information
-                                String title = doc.title();
-                                String content = doc.body().text();
-                                List<String> links = extractLinks(doc);
+                                // Create Page object using static factory method
+                                Page page = Page.fromUrl(url, timeoutMs);
 
                                 // Only increment if we haven't exceeded the limit
                                 int newCount = pagesCrawled.incrementAndGet();
@@ -135,17 +124,14 @@ public class StructuredQueueCrawler implements Crawler {
                                     activeWorkers.decrementAndGet();
                                     break;
                                 }
-
-                                // Create Page object and add to results
-                                Page page = new Page(url, title, 200, content, links);
                                 successfulPages.add(page);
 
                                 // Add new links to queue if within depth limit
                                 if (depth < maxDepth && pagesCrawled.get() < maxPages) {
-                                    links.stream()
+                                    page.links().stream()
                                         .filter(this::shouldFollowLink)
                                         .filter(link -> {
-                                            String normalized = normalizeUrl(link);
+                                            String normalized = Page.normalizeUrl(link);
                                             return visitedUrls.add(normalized); // Thread-safe add and check
                                         })
                                         .forEach(link -> urlQueue.offer(new UrlDepthPair(link, depth + 1)));
@@ -180,18 +166,6 @@ public class StructuredQueueCrawler implements Crawler {
         return new CrawlResult(successfulPages, failedUrls, startTime, endTime);
     }
 
-    /**
-     * Extracts all absolute links from a document.
-     * Returns an immutable list following functional programming principles.
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .toList();
-    }
 
     /**
      * Determines if a link should be followed based on crawler configuration.
@@ -204,24 +178,5 @@ public class StructuredQueueCrawler implements Crawler {
         return url.contains(startDomain);
     }
 
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        // Remove fragment
-        String normalized = url.split("#")[0];
-        // Remove trailing slash using functional approach
-        return normalized.endsWith("/")
-            ? normalized.substring(0, normalized.length() - 1)
-            : normalized;
-    }
 
-    /**
-     * Internal record to track URL and its depth in the crawl tree.
-     */
-    private record UrlDepthPair(String url, int depth) {}
 }

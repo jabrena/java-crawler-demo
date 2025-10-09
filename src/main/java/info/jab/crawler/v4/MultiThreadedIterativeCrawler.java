@@ -3,6 +3,7 @@ package info.jab.crawler.v4;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
+import info.jab.crawler.commons.UrlDepthPair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -78,7 +79,7 @@ public class MultiThreadedIterativeCrawler implements Crawler {
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         // Create a poison pill to signal shutdown
-        final UrlDepthPair POISON_PILL = new UrlDepthPair(null, -1);
+        final UrlDepthPair POISON_PILL = UrlDepthPair.poisonPill();
 
         // Submit worker tasks
         for (int i = 0; i < numThreads; i++) {
@@ -99,7 +100,7 @@ public class MultiThreadedIterativeCrawler implements Crawler {
                         }
 
                         // Check for poison pill
-                        if (current.url() == null) {
+                        if (current.isPoisonPill()) {
                             urlQueue.offer(POISON_PILL); // Pass it on to other threads
                             break;
                         }
@@ -232,8 +233,4 @@ public class MultiThreadedIterativeCrawler implements Crawler {
         return url;
     }
 
-    /**
-     * Internal record to track URL and its depth in the crawl tree.
-     */
-    private record UrlDepthPair(String url, int depth) {}
 }
