@@ -1,0 +1,130 @@
+@startuml
+!theme plain
+title Improved Structured Concurrency Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "ImprovedStructuredCrawler" as Crawler
+participant "StructuredTaskScope" as Scope
+participant "UnifiedCancellationJoiner" as Joiner
+participant "TimeoutUtil" as Timeout
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.timeout(10000)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> Scope: StructuredTaskScope.open(new UnifiedCancellationJoiner<>())
+activate Scope
+activate Joiner
+
+Crawler -> Scope: scope.fork(() -> crawlRecursively())
+activate Scope
+
+== Improved Recursive Crawling with Unified Cancellation ==
+loop For each URL in recursive tree
+Scope -> Crawler: crawlRecursively(url, depth)
+activate Crawler
+
+note right: Scope body participates in cancellation
+Crawler -> Crawler: Check termination conditions\n(depth, page limits, visited URLs)
+
+alt URL not visited and within limits
+Crawler -> Timeout: timeout(Duration.ofMillis(timeoutMs), () -> fetch(url))
+activate Timeout
+Timeout -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Timeout: HTML Document
+deactivate Jsoup
+Timeout --> Crawler: Page result
+deactivate Timeout
+
+Crawler -> Crawler: Extract title, content, links
+Crawler -> Result: Add successful page
+activate Result
+Result --> Crawler: Updated result
+deactivate Result
+
+alt Depth < maxDepth and links found
+Crawler -> Scope: childScope = StructuredTaskScope.open(new UnifiedCancellationJoiner<>())
+activate Scope
+activate Joiner
+
+loop For each discovered link
+Crawler -> Scope: childScope.fork(() -> crawlRecursively(link, depth+1))
+activate Scope
+Scope --> Crawler: Child task created
+deactivate Scope
+end
+
+Crawler -> Scope: childScope.join()
+activate Scope
+note right: Race semantics: first completion wins
+Scope --> Crawler: All child tasks completed
+deactivate Scope
+Scope --> Crawler: Automatic cleanup
+deactivate Scope
+deactivate Joiner
+end
+
+else URL already visited or limits reached
+Crawler -> Crawler: Skip URL (scope body cancellation)
+end
+
+Crawler --> Scope: Recursive crawl completed
+deactivate Crawler
+end
+
+Crawler -> Scope: scope.join()
+activate Scope
+note right: Race semantics: first completion wins
+Scope --> Crawler: All tasks completed
+deactivate Scope
+Scope --> Crawler: Automatic cleanup
+deactivate Scope
+deactivate Joiner
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Crawler
+  Improved Structured Concurrency Features:
+  - UnifiedCancellationJoiner for race semantics
+  - TimeoutUtil for timeout-as-method pattern
+  - Uniform cancellation (scope body participates)
+  - Unified scope logic (no Joiner/body split)
+  - Virtual threads for efficient concurrency
+  - Natural tree-like crawling structure
+  - Addresses SoftwareMill critique of JEP 505
+end note
+
+note left of Scope
+  UnifiedCancellationJoiner Benefits:
+  - Race semantics: first completion wins
+  - Scope body can signal completion
+  - Unified cancellation logic
+  - Better control over completion
+  - No split between Joiner and scope body
+end note
+
+note left of Timeout
+  Timeout-as-Method Pattern:
+  - No configuration parameter needed
+  - Lightweight timeout functionality
+  - Uses StructuredTaskScope internally
+  - Demonstrates resiliency patterns
+  - Race semantics for timeout behavior
+end note
+
+@enduml

@@ -1,0 +1,53 @@
+# Docker ignore file for Java Crawler Demo project
+
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+
+# Version control
+.git/
+.gitignore
+
+# Documentation files
+*.md
+docs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Maven wrapper (we copy these explicitly in Dockerfile)
+# mvnw
+# mvnw.cmd
+
+# Test results (we want to mount the results directory)
+# src/jmh/test/resources/
+
+# E2E test files
+src/e2e/
+
+# Examples (not needed for JMH build)
+src/examples/
