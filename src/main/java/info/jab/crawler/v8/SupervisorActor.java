@@ -3,8 +3,6 @@ package info.jab.crawler.v8;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.v6.ActorMessage;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -119,7 +117,7 @@ public class SupervisorActor {
         }
 
         // Check if URL was already visited (actor state management)
-        String normalizedUrl = normalizeUrl(url);
+        String normalizedUrl = Page.normalizeUrl(url);
         if (visitedUrls.putIfAbsent(normalizedUrl, true) != null) {
             return;
         }
@@ -130,10 +128,8 @@ public class SupervisorActor {
         }
 
         try {
-            // Fetch and parse the page directly (no need for structural concurrency for single page)
-            Document doc = fetchAndParsePage(url);
-            Page page = createPage(url, doc);
-            List<String> links = extractLinks(doc);
+            // Fetch and parse the page using Page.fromUrl
+            Page page = Page.fromUrl(url, timeoutMs);
 
             // Update actor state
             successfulPages.add(page);
@@ -145,19 +141,19 @@ public class SupervisorActor {
             }
 
             // Process discovered links if within depth limit
-            if (depth < maxDepth && !links.isEmpty()) {
+            if (depth < maxDepth && !page.links().isEmpty()) {
                 // Create a new structured scope for child crawls
                 try (var childScope = StructuredTaskScope.<Void>open()) {
                     List<StructuredTaskScope.Subtask<Void>> childTasks = new ArrayList<>();
 
-                    for (String link : links) {
+                    for (String link : page.links()) {
                         // Check page limit before creating child tasks
                         if (pagesCrawled.get() >= maxPages) {
                             break;
                         }
 
                         if (shouldFollowLink(link)) {
-                            String normalizedLink = normalizeUrl(link);
+                            String normalizedLink = Page.normalizeUrl(link);
                             // Don't mark as visited here - let the child task do it
                             if (!visitedUrls.containsKey(normalizedLink)) {
                                 // Fork child crawl as a subtask
@@ -194,53 +190,6 @@ public class SupervisorActor {
         }
     }
 
-    /**
-     * Fetches and parses a web page.
-     *
-     * @param url the URL to fetch
-     * @return the parsed document
-     * @throws IOException if the page cannot be fetched
-     */
-    private Document fetchAndParsePage(String url) throws IOException {
-        return Jsoup.connect(url)
-            .timeout(timeoutMs)
-            .userAgent("Mozilla/5.0 (Educational Hybrid Actor-Structural Crawler)")
-            .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
-            .get();
-    }
-
-    /**
-     * Creates a Page object from a parsed document.
-     *
-     * @param url the original URL
-     * @param doc the parsed document
-     * @return a Page object with extracted content
-     */
-    private Page createPage(String url, Document doc) {
-        String title = doc.title();
-        String content = doc.body().text();
-        List<String> links = extractLinks(doc);
-
-        return new Page(url, title, 200, content, links);
-    }
-
-    /**
-     * Extracts all absolute links from a document.
-     *
-     * @param doc the document to extract links from
-     * @return list of absolute URLs
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .filter(link -> !link.contains("#")) // Exclude fragment-only links
-            .filter(this::shouldFollowLink)
-            .limit(20) // Limit links per page for performance
-            .toList();
-    }
 
     /**
      * Determines if a link should be followed based on crawler configuration.
@@ -256,26 +205,6 @@ public class SupervisorActor {
         return url.contains(startDomain);
     }
 
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        if (url == null || url.isEmpty()) {
-            return url;
-        }
-
-        int hashIndex = url.indexOf('#');
-        if (hashIndex != -1) {
-            url = url.substring(0, hashIndex);
-        }
-        if (url.endsWith("/") && url.length() > 1) {
-            url = url.substring(0, url.length() - 1);
-        }
-        return url;
-    }
 
     /**
      * Shuts down the supervisor actor.
