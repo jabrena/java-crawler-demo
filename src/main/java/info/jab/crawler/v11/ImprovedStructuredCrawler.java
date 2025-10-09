@@ -3,10 +3,6 @@ package info.jab.crawler.v11;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -67,13 +63,13 @@ public class ImprovedStructuredCrawler implements Crawler {
 
     /**
      * Crawls the web starting from the given seed URL using improved structured concurrency.
-     * 
+     *
      * This implementation addresses the SoftwareMill critique by:
      * 1. Using custom UnifiedCancellationJoiner for race semantics
      * 2. Implementing timeout-as-method pattern
      * 3. Allowing scope body to participate in cancellation
      * 4. Providing unified scope logic without Joiner/body split
-     * 
+     *
      * @param seedUrl the starting URL for the crawl
      * @return CrawlResult containing all crawled pages and statistics
      */
@@ -82,19 +78,18 @@ public class ImprovedStructuredCrawler implements Crawler {
         if (seedUrl == null || seedUrl.trim().isEmpty()) {
             throw new IllegalArgumentException("Seed URL cannot be null or empty");
         }
-        
+
         long startTime = System.currentTimeMillis();
-        
+
         // Thread-safe collections for coordination
         ConcurrentHashMap<String, Boolean> visitedUrls = new ConcurrentHashMap<>();
         AtomicInteger pagesCrawled = new AtomicInteger(0);
         List<Page> successfulPages = Collections.synchronizedList(new ArrayList<>());
         List<String> failedUrls = Collections.synchronizedList(new ArrayList<>());
-        
+
         try {
             // Use improved structured concurrency with custom joiner for main scope
             try (var scope = StructuredTaskScope.<Void, Void>open(new UnifiedCancellationJoiner<>())) {
-                // Fork the main crawling task
                 scope.fork(() -> {
                     crawlWithImprovedStructuredConcurrency(
                         new CrawlTask(seedUrl, 0),
@@ -103,9 +98,9 @@ public class ImprovedStructuredCrawler implements Crawler {
                         successfulPages,
                         failedUrls
                     );
-                    return null;
+                    return (Void) null; // More explicit about the intent
                 });
-                
+
                 // Wait for completion with race semantics
                 scope.join();
             }
@@ -113,7 +108,7 @@ public class ImprovedStructuredCrawler implements Crawler {
             // Handle any unexpected errors
             failedUrls.add(seedUrl + " (error: " + e.getMessage() + ")");
         }
-        
+
         long endTime = System.currentTimeMillis();
         return new CrawlResult(
             new ArrayList<>(successfulPages),
@@ -154,7 +149,7 @@ public class ImprovedStructuredCrawler implements Crawler {
             return; // Scope body signals completion
         }
 
-        String normalizedUrl = normalizeUrl(task.url());
+        String normalizedUrl = Page.normalizeUrl(task.url());
         if (visitedUrls.putIfAbsent(normalizedUrl, true) != null) {
             return; // Already visited, scope body signals completion
         }
@@ -163,7 +158,7 @@ public class ImprovedStructuredCrawler implements Crawler {
             // Use timeout-as-method pattern for individual page fetch
             Page page = TimeoutUtil.timeout(
                 Duration.ofMillis(timeoutMs),
-                () -> fetchAndParsePage(task.url())
+                () -> Page.fromUrl(task.url(), timeoutMs)
             );
 
             // Check page limit after successful fetch (scope body participation)
@@ -190,7 +185,7 @@ public class ImprovedStructuredCrawler implements Crawler {
                         }
 
                         if (shouldFollowLink(link)) {
-                            String normalizedLink = normalizeUrl(link);
+                            String normalizedLink = Page.normalizeUrl(link);
                             if (!visitedUrls.containsKey(normalizedLink)) {
                                 CrawlTask childTask = new CrawlTask(link, task.depth() + 1);
 
@@ -222,40 +217,6 @@ public class ImprovedStructuredCrawler implements Crawler {
         }
     }
 
-    /**
-     * Fetches and parses a web page using Jsoup.
-     *
-     * @param url the URL to fetch
-     * @return a Page object with the parsed content
-     * @throws IOException if the page cannot be fetched or parsed
-     */
-    private Page fetchAndParsePage(String url) throws IOException {
-        Document doc = Jsoup.connect(url)
-            .timeout(timeoutMs)
-            .userAgent("Mozilla/5.0 (Educational Improved Structured Concurrency Crawler)")
-            .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
-            .get();
-
-        String title = doc.title();
-        String content = doc.body().text();
-        List<String> links = extractLinks(doc);
-
-        return new Page(url, title, 200, content, links);
-    }
-
-    /**
-     * Extracts links from a parsed HTML document.
-     *
-     * @param doc the parsed HTML document
-     * @return list of extracted links
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]").stream()
-            .map(element -> element.attr("abs:href"))
-            .filter(link -> !link.isEmpty())
-            .filter(this::shouldFollowLink)
-            .toList();
-    }
 
     /**
      * Determines whether a link should be followed based on configuration.
@@ -289,23 +250,4 @@ public class ImprovedStructuredCrawler implements Crawler {
         }
     }
 
-    /**
-     * Normalizes a URL for duplicate detection.
-     *
-     * @param url the URL to normalize
-     * @return the normalized URL
-     */
-    private String normalizeUrl(String url) {
-        if (url == null) {
-            return "";
-        }
-
-        // Remove trailing slash and convert to lowercase for consistent comparison
-        String normalized = url.trim().toLowerCase();
-        if (normalized.endsWith("/") && normalized.length() > 1) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-
-        return normalized;
-    }
 }

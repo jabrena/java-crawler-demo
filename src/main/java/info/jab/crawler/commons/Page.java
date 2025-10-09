@@ -79,17 +79,25 @@ public record Page(
     }
 
     /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
+     * Normalizes a URL by removing fragments, trimming whitespace, converting to lowercase,
+     * and removing trailing slashes. This is a pure function with no side effects.
      *
-     * @param url the URL to normalize
-     * @return normalized URL
+     * @param url the URL to normalize (can be null)
+     * @return normalized URL (empty string if input is null)
      */
     public static String normalizeUrl(String url) {
+        if (url == null) {
+            return "";
+        }
+
+        // Trim whitespace and convert to lowercase for consistent comparison
+        String normalized = url.trim().toLowerCase();
+
         // Remove fragment
-        String normalized = url.split("#")[0];
+        normalized = normalized.split("#")[0];
+
         // Remove trailing slash using functional approach
-        return normalized.endsWith("/")
+        return normalized.endsWith("/") && normalized.length() > 1
             ? normalized.substring(0, normalized.length() - 1)
             : normalized;
     }

@@ -177,6 +177,4 @@ public class StructuredQueueCrawler implements Crawler {
         // Only follow links from the same domain
         return url.contains(startDomain);
     }
-
-
 }

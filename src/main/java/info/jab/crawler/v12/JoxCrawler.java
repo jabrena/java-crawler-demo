@@ -3,12 +3,9 @@ package info.jab.crawler.v12;
 import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import com.softwaremill.jox.structured.CancellableFork;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -162,14 +159,14 @@ public class JoxCrawler implements Crawler {
             return; // Scope body signals completion
         }
 
-        String normalizedUrl = normalizeUrl(task.url());
+        String normalizedUrl = Page.normalizeUrl(task.url());
         if (visitedUrls.putIfAbsent(normalizedUrl, true) != null) {
             return; // Already visited, scope body signals completion
         }
 
         try {
             // Fetch and parse the page
-            Page page = fetchAndParsePage(task.url());
+            Page page = Page.fromUrl(task.url(), timeoutMs);
 
             // Check page limit after successful fetch (scope body participation)
             int currentCount = pagesCrawled.incrementAndGet();
@@ -194,7 +191,7 @@ public class JoxCrawler implements Crawler {
                             }
 
                             if (shouldFollowLink(link)) {
-                                String normalizedLink = normalizeUrl(link);
+                                String normalizedLink = Page.normalizeUrl(link);
                                 if (!visitedUrls.containsKey(normalizedLink)) {
                                     CrawlTask childTask = task.nextDepth();
 
@@ -232,41 +229,6 @@ public class JoxCrawler implements Crawler {
     }
 
     /**
-     * Fetches and parses a web page using Jsoup.
-     *
-     * @param url the URL to fetch
-     * @return a Page object with the parsed content
-     * @throws IOException if the page cannot be fetched or parsed
-     */
-    private Page fetchAndParsePage(String url) throws IOException {
-        Document doc = Jsoup.connect(url)
-            .timeout(timeoutMs)
-            .userAgent("Mozilla/5.0 (Educational Jox Structured Concurrency Crawler)")
-            .maxBodySize(1024 * 1024) // Limit body size to 1MB for performance
-            .get();
-
-        String title = doc.title();
-        String content = doc.body().text();
-        List<String> links = extractLinks(doc);
-
-        return new Page(url, title, 200, content, links);
-    }
-
-    /**
-     * Extracts links from a parsed HTML document.
-     *
-     * @param doc the parsed HTML document
-     * @return list of extracted links
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]").stream()
-            .map(element -> element.attr("abs:href"))
-            .filter(link -> !link.isEmpty())
-            .filter(this::shouldFollowLink)
-            .toList();
-    }
-
-    /**
      * Determines whether a link should be followed based on configuration.
      *
      * @param link the link to check
@@ -298,23 +260,4 @@ public class JoxCrawler implements Crawler {
         }
     }
 
-    /**
-     * Normalizes a URL for duplicate detection.
-     *
-     * @param url the URL to normalize
-     * @return the normalized URL
-     */
-    private String normalizeUrl(String url) {
-        if (url == null) {
-            return "";
-        }
-
-        // Remove trailing slash and convert to lowercase for consistent comparison
-        String normalized = url.trim().toLowerCase();
-        if (normalized.endsWith("/") && normalized.length() > 1) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-
-        return normalized;
-    }
 }
