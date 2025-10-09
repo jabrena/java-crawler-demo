@@ -29,6 +29,9 @@ class JoxCrawlerE2ETest {
 
     @BeforeEach
     void setUp() {
+        // Clear page cache to ensure fresh tests
+        info.jab.crawler.commons.Page.clearCache();
+
         wireMockServer = new WireMockServer(8080);
         wireMockServer.start();
         WireMock.configureFor("localhost", 8080);
@@ -270,7 +273,7 @@ class JoxCrawlerE2ETest {
 
     private void setupMockResponsesWithSlowResponse() {
         setupMockResponses();
-        
+
         // Add a slow response
         stubFor(get(urlEqualTo("/slow"))
             .willReturn(aResponse()
@@ -305,7 +308,7 @@ class JoxCrawlerE2ETest {
 
     private void setupMockResponsesWith404() {
         setupMockResponses();
-        
+
         // Add a 404 response
         stubFor(get(urlEqualTo("/notfound"))
             .willReturn(aResponse()

@@ -4,8 +4,6 @@ import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.UrlDepthPair;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,7 +67,7 @@ public class ProducerConsumerCrawler implements Crawler {
 
         // Initialize with seed URL at depth 0
         urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-        visitedUrls.add(normalizeUrl(seedUrl));
+        visitedUrls.add(Page.normalizeUrl(seedUrl));
 
         // Create thread pool
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -115,16 +113,8 @@ public class ProducerConsumerCrawler implements Crawler {
                         int depth = current.depth();
 
                         try {
-                            // Fetch and parse the page
-                            Document doc = Jsoup.connect(url)
-                                .timeout(timeoutMs)
-                                .userAgent("Mozilla/5.0 (Educational Crawler)")
-                                .get();
-
-                            // Extract information
-                            String title = doc.title();
-                            String content = doc.body().text();
-                            List<String> links = extractLinks(doc);
+                            // Fetch and parse the page using centralized method
+                            Page page = Page.fromUrl(url, timeoutMs);
 
                             // Only increment if we haven't exceeded the limit
                             int newCount = pagesCrawled.incrementAndGet();
@@ -136,16 +126,15 @@ public class ProducerConsumerCrawler implements Crawler {
                                 break;
                             }
 
-                            // Create Page object and add to results
-                            Page page = new Page(url, title, 200, content, links);
+                            // Add page to results
                             successfulPages.add(page);
 
                             // Add new links to queue if within depth limit
                             if (depth < maxDepth && pagesCrawled.get() < maxPages) {
-                                links.stream()
+                                page.links().stream()
                                     .filter(this::shouldFollowLink)
                                     .filter(link -> {
-                                        String normalized = normalizeUrl(link);
+                                        String normalized = Page.normalizeUrl(link);
                                         return visitedUrls.add(normalized); // Thread-safe add and check
                                     })
                                     .forEach(link -> urlQueue.offer(new UrlDepthPair(link, depth + 1)));
@@ -179,18 +168,6 @@ public class ProducerConsumerCrawler implements Crawler {
         return new CrawlResult(successfulPages, failedUrls, startTime, endTime);
     }
 
-    /**
-     * Extracts all absolute links from a document.
-     * Returns an immutable list following functional programming principles.
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .toList();
-    }
 
     /**
      * Determines if a link should be followed based on crawler configuration.
@@ -202,23 +179,4 @@ public class ProducerConsumerCrawler implements Crawler {
         // Only follow links from the same domain
         return url.contains(startDomain);
     }
-
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        // Remove fragment
-        String normalized = url.split("#")[0];
-        // Remove trailing slash using functional approach
-        return normalized.endsWith("/")
-            ? normalized.substring(0, normalized.length() - 1)
-            : normalized;
-    }
-
-
 }
-

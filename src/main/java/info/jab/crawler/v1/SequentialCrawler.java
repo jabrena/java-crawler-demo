@@ -4,13 +4,10 @@ import info.jab.crawler.commons.Crawler;
 import info.jab.crawler.commons.CrawlResult;
 import info.jab.crawler.commons.Page;
 import info.jab.crawler.commons.UrlDepthPair;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -53,7 +50,7 @@ public class SequentialCrawler implements Crawler {
 
         // Initialize with seed URL at depth 0
         urlQueue.offer(new UrlDepthPair(seedUrl, 0));
-        visitedUrls.add(normalizeUrl(seedUrl));
+        visitedUrls.add(Page.normalizeUrl(seedUrl));
 
         while (!urlQueue.isEmpty() && result.getTotalPagesCrawled() < maxPages) {
             UrlDepthPair current = urlQueue.poll();
@@ -61,29 +58,20 @@ public class SequentialCrawler implements Crawler {
             int depth = current.depth();
 
             try {
-                // Fetch and parse the page
-                Document doc = Jsoup.connect(url)
-                    .timeout(timeoutMs)
-                    .userAgent("Mozilla/5.0 (Educational Crawler)")
-                    .get();
+                // Fetch and parse the page using centralized method
+                Page page = Page.fromUrl(url, timeoutMs);
 
-                // Extract information
-                String title = doc.title();
-                String content = doc.body().text();
-                List<String> links = extractLinks(doc);
-
-                // Create Page object and update result immutably
-                Page page = new Page(url, title, 200, content, links);
+                // Update result immutably
                 result = result.withSuccessfulPage(page);
 
                 // Add new links to queue if within depth limit
                 if (depth < maxDepth) {
                     // Functional approach: filter and collect new links to visit
-                    links.stream()
+                    page.links().stream()
                         .filter(link -> shouldFollowLink(link))
-                        .filter(link -> !visitedUrls.contains(normalizeUrl(link)))
+                        .filter(link -> !visitedUrls.contains(Page.normalizeUrl(link)))
                         .forEach(link -> {
-                            visitedUrls.add(normalizeUrl(link));
+                            visitedUrls.add(Page.normalizeUrl(link));
                             urlQueue.offer(new UrlDepthPair(link, depth + 1));
                         });
                 }
@@ -98,20 +86,6 @@ public class SequentialCrawler implements Crawler {
     }
 
     /**
-     * Extracts all absolute links from a document.
-     * Returns an immutable list following functional programming principles.
-     */
-    private List<String> extractLinks(Document doc) {
-        return doc.select("a[href]")
-            .stream()
-            .map(element -> element.absUrl("href"))
-            .filter(link -> !link.isEmpty())
-            .filter(link -> link.startsWith("http://") || link.startsWith("https://"))
-            .filter(link -> !link.contains("#")) // Exclude fragment-only links
-            .toList();
-    }
-
-    /**
      * Determines if a link should be followed based on crawler configuration.
      */
     private boolean shouldFollowLink(String url) {
@@ -121,22 +95,4 @@ public class SequentialCrawler implements Crawler {
         // Only follow links from the same domain
         return url.contains(startDomain);
     }
-
-    /**
-     * Normalizes a URL by removing fragments and trailing slashes.
-     * This is a pure function with no side effects.
-     *
-     * @param url the URL to normalize
-     * @return normalized URL
-     */
-    private String normalizeUrl(String url) {
-        // Remove fragment
-        String normalized = url.split("#")[0];
-        // Remove trailing slash using functional approach
-        return normalized.endsWith("/")
-            ? normalized.substring(0, normalized.length() - 1)
-            : normalized;
-    }
-
-
 }
