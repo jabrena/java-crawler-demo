@@ -20,12 +20,12 @@
 ./mvnw clean package
 
 # Run Unit test
-./mvnw clean test
+MAVEN_OPTS="--enable-preview" ./mvnw clean test
 
 # Run integration tests
-./mvnw clean verify
+MAVEN_OPTS="--enable-preview" ./mvnw clean verify
 
-./mvnw clean verify -Pe2e
+MAVEN_OPTS="--enable-preview" ./mvnw clean verify -Pe2e
 
 # Check for dependency updates
 ./mvnw versions:display-property-updates

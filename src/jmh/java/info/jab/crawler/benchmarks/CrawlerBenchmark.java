@@ -203,6 +203,18 @@ public class CrawlerBenchmark {
         return crawler.crawl(TEST_URL);
     }
 
+    @Benchmark
+    public CrawlResult benchmarkStructuredQueueCrawler() {
+        Crawler crawler = CrawlerType.STRUCTURED_QUEUE_CRAWLER.createWith(builder ->
+            builder.maxDepth(MAX_DEPTH)
+                   .maxPages(MAX_PAGES)
+                   .timeout(TIMEOUT_MS)
+                   .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
+                   .numThreads(NUM_THREADS)
+        );
+        return crawler.crawl(TEST_URL);
+    }
+
     // ============================================================================
     // UTILITY METHODS
     // ============================================================================
@@ -224,7 +236,8 @@ public class CrawlerBenchmark {
                 type == CrawlerType.RECURSIVE_ACTOR ||
                 type == CrawlerType.HYBRID_ACTOR_STRUCTURAL ||
                 type == CrawlerType.STRUCTURED_WORKER ||
-                type == CrawlerType.VIRTUAL_THREAD_ACTOR) {
+                type == CrawlerType.VIRTUAL_THREAD_ACTOR ||
+                type == CrawlerType.STRUCTURED_QUEUE_CRAWLER) {
                 builder.numThreads(NUM_THREADS);
             }
         });
