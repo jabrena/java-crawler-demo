@@ -147,6 +147,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case IMPROVED_STRUCTURED_CONCURRENCY -> new info.jab.crawler.v11.ImprovedStructuredCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
             );
+            case JOX_STRUCTURED_CONCURRENCY -> new info.jab.crawler.v12.JoxCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
+            );
         };
     }
 }
