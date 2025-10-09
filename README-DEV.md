@@ -54,6 +54,7 @@ java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks
 # Docker JMH Benchmarks
 # Build Docker image with GraalVM Java 25
 docker build -t java-crawler-jmh .
+docker build --no-cache -t java-crawler-jmh .
 
 # Run JMH benchmarks in Docker container with volume mount for results
 docker run -v $(pwd)/src/jmh/test/resources:/app/results java-crawler-jmh
