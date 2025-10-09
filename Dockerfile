@@ -23,6 +23,10 @@ RUN ./mvnw clean package -Pjmh -DskipTests
 # Stage 2: Runtime stage
 FROM ghcr.io/graalvm/jdk-community:25 AS runtime
 
+# Set timezone to Madrid, Spain
+ENV TZ=Europe/Madrid
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Set working directory
 WORKDIR /app
 
