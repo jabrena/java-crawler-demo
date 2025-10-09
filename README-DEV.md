@@ -50,5 +50,14 @@ java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks
 # Some benchmarks may fail with "InfraControl" errors when using forked execution
 # However, several benchmarks (ActorCrawler, MultiThreadedRecursiveCrawler, etc.) run successfully
 # Results are saved in: src/jmh/test/resources/jmh-crawler-benchmark-results.json
+
+# Docker JMH Benchmarks
+# Build Docker image with GraalVM Java 25
+docker build -t java-crawler-jmh .
+
+# Run JMH benchmarks in Docker container with volume mount for results
+docker run -v $(pwd)/src/jmh/test/resources:/app/results java-crawler-jmh
+
+# The JSON results will be saved to: src/jmh/test/resources/jmh-results.json
 ```
 
