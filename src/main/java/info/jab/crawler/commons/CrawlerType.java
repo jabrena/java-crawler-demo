@@ -109,7 +109,16 @@ public enum CrawlerType {
      * Provides better error handling, automatic cleanup, and individual task
      * cancellation support compared to standard StructuredTaskScope.
      */
-    JOX_STRUCTURED_CONCURRENCY;
+    JOX_STRUCTURED_CONCURRENCY,
+
+    /**
+     * Structured queue crawler implementation (v13).
+     * Combines BlockingQueue + worker pattern with StructuredTaskScope.
+     * Uses structured concurrency for worker management with queue-based coordination.
+     * Provides automatic resource cleanup, better error handling, and virtual threads
+     * while maintaining the proven producer-consumer pattern from v2.
+     */
+    STRUCTURED_QUEUE_CRAWLER;
 
     /**
      * Creates a new builder instance for the selected crawler type.

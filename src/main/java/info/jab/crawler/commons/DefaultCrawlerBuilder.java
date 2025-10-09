@@ -150,6 +150,9 @@ public class DefaultCrawlerBuilder implements CrawlerBuilder {
             case JOX_STRUCTURED_CONCURRENCY -> new info.jab.crawler.v12.JoxCrawler(
                 maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain
             );
+            case STRUCTURED_QUEUE_CRAWLER -> new info.jab.crawler.v13.StructuredQueueCrawler(
+                maxDepth, maxPages, timeoutMs, followExternalLinks, startDomain, numThreads
+            );
         };
     }
 }

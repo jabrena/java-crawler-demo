@@ -101,7 +101,10 @@
             <exclude>**/*IT.java</exclude>
             <exclude>**/*IntegrationTest.java</exclude>
           </excludes>
-          <argLine>--enable-preview</argLine>
+          <argLine>--enable-preview --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+          <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
 
@@ -116,7 +119,11 @@
             <include>**/*IT.java</include>
             <include>**/*IntegrationTest.java</include>
           </includes>
-          <argLine>--enable-preview</argLine>
+          <argLine>--enable-preview --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED -Djava.util.concurrent.ForkJoinPool.common.parallelism=1</argLine>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+          <useSystemClassLoader>false</useSystemClassLoader>
+          <useManifestOnlyJar>false</useManifestOnlyJar>
         </configuration>
         <executions>
           <execution>
@@ -166,7 +173,9 @@
               <includes>
                 <include>**/*E2ETest.java</include>
               </includes>
-              <argLine>--enable-preview</argLine>
+              <argLine>--enable-preview --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
             </configuration>
             <executions>
               <execution>

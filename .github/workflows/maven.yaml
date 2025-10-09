@@ -14,5 +14,15 @@ jobs:
         with:
           distribution: 'graalvm' # See 'Supported distributions' for available options
           java-version: '25'
-      - name: Maven build
+      - name: Maven unit tests
+        run: ./mvnw --batch-mode --no-transfer-progress test --file pom.xml
+        env:
+          MAVEN_OPTS: "--enable-preview"
+      - name: Maven integration tests
         run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml
+        env:
+          MAVEN_OPTS: "--enable-preview"
+      - name: Maven E2E tests
+        run: ./mvnw --batch-mode --no-transfer-progress verify -Pe2e --file pom.xml
+        env:
+          MAVEN_OPTS: "--enable-preview"

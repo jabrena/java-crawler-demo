@@ -20,12 +20,12 @@
 ./mvnw clean package
 
 # Run Unit test
-./mvnw clean test
+MAVEN_OPTS="--enable-preview" ./mvnw clean test
 
 # Run integration tests
-./mvnw clean verify
+MAVEN_OPTS="--enable-preview" ./mvnw clean verify
 
-./mvnw clean verify -Pe2e
+MAVEN_OPTS="--enable-preview" ./mvnw clean verify -Pe2e
 
 # Check for dependency updates
 ./mvnw versions:display-property-updates
@@ -54,6 +54,7 @@ java --enable-preview -jar target/jmh-benchmarks.jar info.jab.crawler.benchmarks
 # Docker JMH Benchmarks
 # Build Docker image with GraalVM Java 25
 docker build -t java-crawler-jmh .
+docker build --no-cache -t java-crawler-jmh .
 
 # Run JMH benchmarks in Docker container with volume mount for results
 docker run -v $(pwd)/src/jmh/test/resources:/app/results java-crawler-jmh
