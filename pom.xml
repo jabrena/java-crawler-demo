@@ -16,7 +16,7 @@
     <!-- JMH-related properties -->
     <jmh.version>1.37</jmh.version>
     <maven-plugin-build-helper.version>3.6.1</maven-plugin-build-helper.version>
-    <maven-plugin-shade.version>3.5.1</maven-plugin-shade.version>
+    <maven-plugin-shade.version>3.6.1</maven-plugin-shade.version>
     <maven-plugin-compiler.version>3.14.1</maven-plugin-compiler.version>
   </properties>
 
