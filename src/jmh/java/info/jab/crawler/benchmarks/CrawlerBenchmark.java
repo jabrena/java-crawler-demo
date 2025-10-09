@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
  * 9. Structured Worker Crawler (v9)
  * 10. Virtual Thread Actor Crawler (v10)
  * 11. Improved Structured Concurrency Crawler (v11)
+ * 12. Jox-based Structured Concurrency Crawler (v12)
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -183,6 +184,17 @@ public class CrawlerBenchmark {
     @Benchmark
     public CrawlResult benchmarkImprovedStructuredConcurrencyCrawler() {
         Crawler crawler = CrawlerType.IMPROVED_STRUCTURED_CONCURRENCY.createWith(builder ->
+            builder.maxDepth(MAX_DEPTH)
+                   .maxPages(MAX_PAGES)
+                   .timeout(TIMEOUT_MS)
+                   .followExternalLinks(FOLLOW_EXTERNAL_LINKS)
+        );
+        return crawler.crawl(TEST_URL);
+    }
+
+    @Benchmark
+    public CrawlResult benchmarkJoxCrawler() {
+        Crawler crawler = CrawlerType.JOX_STRUCTURED_CONCURRENCY.createWith(builder ->
             builder.maxDepth(MAX_DEPTH)
                    .maxPages(MAX_PAGES)
                    .timeout(TIMEOUT_MS)

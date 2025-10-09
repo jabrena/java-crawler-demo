@@ -1,0 +1,123 @@
+@startuml
+!theme plain
+title Jox-based Structured Concurrency Crawler - High-Level Overview
+
+actor "Client" as Client
+participant "JoxCrawler" as Crawler
+participant "supervised()" as Supervised
+participant "forkCancellable()" as Fork
+participant "Jsoup Library" as Jsoup
+participant "CrawlResult" as Result
+
+== Crawler Creation ==
+Client -> Crawler: Builder.maxDepth(2)\n.maxPages(50)\n.timeout(10000)\n.build()
+activate Crawler
+
+== Web Crawling Process ==
+Client -> Crawler: crawl(seedUrl)
+
+Crawler -> Supervised: supervised(scope -> { ... })
+activate Supervised
+note right: Scope body runs in separate virtual thread
+
+Crawler -> Fork: scope.forkCancellable(() -> crawlWithJoxSupervisedScope())
+activate Fork
+
+== Jox Supervised Scope Processing ==
+loop For each URL in recursive tree
+Fork -> Crawler: crawlWithJoxSupervisedScope(url, depth)
+activate Crawler
+
+note right: Scope body participates in cancellation
+Crawler -> Crawler: Check termination conditions\n(depth, page limits, visited URLs)
+
+alt URL not visited and within limits
+Crawler -> Jsoup: connect(url).get()
+activate Jsoup
+Jsoup --> Crawler: HTML Document
+deactivate Jsoup
+
+Crawler -> Crawler: Extract title, content, links
+Crawler -> Result: Add successful page
+activate Result
+Result --> Crawler: Updated result
+deactivate Result
+
+alt Depth < maxDepth and links found
+Crawler -> Supervised: supervised(childScope -> { ... })
+activate Supervised
+note right: Child supervised scope for parallel processing
+
+loop For each discovered link
+Crawler -> Fork: childScope.forkCancellable(() -> crawlRecursively(link, depth+1))
+activate Fork
+Fork --> Crawler: Child task created
+deactivate Fork
+end
+
+Crawler -> Fork: childTask.join()
+activate Fork
+note right: Clear blocking semantics with Fork.join()
+Fork --> Crawler: Child task completed
+deactivate Fork
+Supervised --> Crawler: Automatic cleanup
+deactivate Supervised
+end
+
+else URL already visited or limits reached
+Crawler -> Crawler: Skip URL (scope body cancellation)
+end
+
+Crawler --> Fork: Recursive crawl completed
+deactivate Crawler
+end
+
+Crawler -> Fork: mainTask.join()
+activate Fork
+note right: Clear blocking semantics with Fork.join()
+Fork --> Crawler: Main task completed
+deactivate Fork
+Supervised --> Crawler: Automatic cleanup
+deactivate Supervised
+
+Crawler --> Client: CrawlResult\n(pages, failed URLs, statistics)
+deactivate Crawler
+
+note right of Result
+  CrawlResult contains:
+  - List of successfully crawled pages
+  - List of failed URLs
+  - Total pages crawled
+  - Completion status
+end note
+
+note left of Crawler
+  Jox Supervised Scope Features:
+  - supervised() scopes for automatic supervision
+  - forkCancellable() for individual task cancellation
+  - Clear fork semantics with Fork.join()
+  - Supervisor pattern with separate virtual thread
+  - Automatic interruption and cleanup
+  - Better error handling than JEP 505
+  - Natural tree-like crawling structure
+end note
+
+note left of Supervised
+  Supervised Scope Benefits:
+  - Scope body runs in separate virtual thread
+  - Automatic supervision and cleanup
+  - Better error handling than JEP 505
+  - Uniform cancellation across all tasks
+  - Supervisor pattern implementation
+end note
+
+note left of Fork
+  Cancellable Fork Benefits:
+  - Individual task cancellation support
+  - Clear blocking semantics with Fork.join()
+  - No confusion with Future.get()
+  - Better control than standard forks
+  - Clean cancellation propagation
+end note
+
+@enduml

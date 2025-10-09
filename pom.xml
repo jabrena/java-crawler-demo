@@ -66,6 +66,13 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Jox structured concurrency library -->
+    <dependency>
+      <groupId>com.softwaremill.jox</groupId>
+      <artifactId>structured</artifactId>
+      <version>0.5.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>

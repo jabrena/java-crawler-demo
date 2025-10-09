@@ -13,4 +13,6 @@ Verify changes with:
 ./mvnw clean test
 ./mvnw clean verify
 ./mvnw clean verify -Pe2e
+
+@20251009-1148-jmh-results.json Update the table results (Performance JMH, Performance Criteria & Throughput) and sort based on the performance criteria.@README.md if you add a new column populate the rest of the columns based on the implementation details.
 ```

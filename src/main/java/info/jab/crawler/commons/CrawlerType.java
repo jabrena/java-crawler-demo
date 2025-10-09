@@ -94,7 +94,22 @@ public enum CrawlerType {
      * This implementation demonstrates how to overcome the limitations identified
      * in the SoftwareMill article while maintaining the benefits of structured concurrency.
      */
-    IMPROVED_STRUCTURED_CONCURRENCY;
+    IMPROVED_STRUCTURED_CONCURRENCY,
+
+    /**
+     * Jox-based structured concurrency crawler implementation (v12).
+     * Uses SoftwareMill's Jox library for supervised scopes with:
+     * - supervised() scopes for automatic resource management
+     * - forkCancellable() for individual task cancellation
+     * - Built-in timeout mechanisms
+     * - Supervisor pattern with separate virtual thread for scope body
+     * - Clear fork semantics with Fork.join() (unlike Subtask.get())
+     *
+     * Addresses SoftwareMill critique of JEP 505 using their own Jox library.
+     * Provides better error handling, automatic cleanup, and individual task
+     * cancellation support compared to standard StructuredTaskScope.
+     */
+    JOX_STRUCTURED_CONCURRENCY;
 
     /**
      * Creates a new builder instance for the selected crawler type.
