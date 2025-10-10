@@ -4,7 +4,7 @@ A repository about a collection of web crawler implementation in Java.
 
 ## Comparison Matrix
 
-*Performance data based on JMH benchmarks (2025-01-09) using Java 25 with GraalVM CE, 2 forks, 5 measurement iterations*
+*Performance data based on JMH benchmarks (2025-01-10) using Java 25 with GraalVM CE, 2 forks, 5 measurement iterations*
 
 **Benchmark Environment:**
 - **OS**: macOS (Darwin 23.5.0)
@@ -13,12 +13,12 @@ A repository about a collection of web crawler implementation in Java.
 - **JVM Args**: `-Xms1G -Xmx2G --enable-preview`
 - **Measurement**: Average time per operation (avgt mode)
 
-| Aspect | v11 | v12 | v10 | v9 | v4 | v2 | v13 | v5 | v3 | v1 | v7 | v8 | v6 |
+| Aspect | v11 | v12 | v2 | v4 | v5 | v10 | v13 | v9 | v3 | v1 | v7 | v6 | v8 |
 |--------|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| **Analysis** | [+ Info](./docs/v11/README.md) | [+ Info](./docs/v12/README.md) | [+ Info](./docs/v10/README.md) | [+ Info](./docs/v9/README.md) | [+ Info](./docs/v4/README.md) | [+ Info](./docs/v2/README.md) | [+ Info](./docs/v13/README.md) | [+ Info](./docs/v5/README.md) | [+ Info](./docs/v3/README.md) | [+ Info](./docs/v1/README.md) | [+ Info](./docs/v7/README.md) | [+ Info](./docs/v8/README.md) | [+ Info](./docs/v6/README.md) |
-| **Implementation** | [ImprovedStructured](./src/main/java/info/jab/crawler/v11/ImprovedStructuredCrawler.java) | [Jox](./src/main/java/info/jab/crawler/v12/JoxCrawler.java) | [VirtualThreadActor](./src/main/java/info/jab/crawler/v10/VirtualThreadActorCrawler.java) | [StructuredWorker](./src/main/java/info/jab/crawler/v9/StructuredWorkerCrawler.java) | [MultiThreadedIterative](./src/main/java/info/jab/crawler/v4/MultiThreadedIterativeCrawler.java) | [ProducerConsumer](./src/main/java/info/jab/crawler/v2/ProducerConsumerCrawler.java) | [StructuredQueue](./src/main/java/info/jab/crawler/v13/StructuredQueueCrawler.java) | [Actor](./src/main/java/info/jab/crawler/v5/ActorCrawler.java) | [Recursive](./src/main/java/info/jab/crawler/v3/RecursiveCrawler.java) | [Sequential](./src/main/java/info/jab/crawler/v1/SequentialCrawler.java) | [StructuralConcurrency](./src/main/java/info/jab/crawler/v7/StructuralConcurrencyCrawler.java) | [HybridActorStructural](./src/main/java/info/jab/crawler/v8/HybridActorStructuralCrawler.java) | [RecursiveActor](./src/main/java/info/jab/crawler/v6/RecursiveActorCrawler.java) |
-| **Performance (JMH)** | **40.61 ms/op** ⭐ | **50.92 ms/op** ⭐ | 687.94 ms/op | 713.42 ms/op | 683.07 ms/op | 723.91 ms/op | 731.50 ms/op | 706.15 ms/op | 1152.43 ms/op | 1305.63 ms/op | 1856.63 ms/op ⚠️ | 1459.25 ms/op ⚠️ | 1893.83 ms/op ⚠️ |
-| **Throughput** | **Exceptional** | **Exceptional** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | High | High | Low | Low | Low |
+| **Analysis** | [+ Info](./docs/v11/README.md) | [+ Info](./docs/v12/README.md) | [+ Info](./docs/v2/README.md) | [+ Info](./docs/v4/README.md) | [+ Info](./docs/v5/README.md) | [+ Info](./docs/v10/README.md) | [+ Info](./docs/v13/README.md) | [+ Info](./docs/v9/README.md) | [+ Info](./docs/v3/README.md) | [+ Info](./docs/v1/README.md) | [+ Info](./docs/v7/README.md) | [+ Info](./docs/v6/README.md) | [+ Info](./docs/v8/README.md) |
+| **Implementation** | [ImprovedStructured](./src/main/java/info/jab/crawler/v11/ImprovedStructuredCrawler.java) | [Jox](./src/main/java/info/jab/crawler/v12/JoxCrawler.java) | [ProducerConsumer](./src/main/java/info/jab/crawler/v2/ProducerConsumerCrawler.java) | [MultiThreadedIterative](./src/main/java/info/jab/crawler/v4/MultiThreadedIterativeCrawler.java) | [Actor](./src/main/java/info/jab/crawler/v5/ActorCrawler.java) | [VirtualThreadActor](./src/main/java/info/jab/crawler/v10/VirtualThreadActorCrawler.java) | [StructuredQueue](./src/main/java/info/jab/crawler/v13/StructuredQueueCrawler.java) | [StructuredWorker](./src/main/java/info/jab/crawler/v9/StructuredWorkerCrawler.java) | [Recursive](./src/main/java/info/jab/crawler/v3/RecursiveCrawler.java) | [Sequential](./src/main/java/info/jab/crawler/v1/SequentialCrawler.java) | [StructuralConcurrency](./src/main/java/info/jab/crawler/v7/StructuralConcurrencyCrawler.java) | [RecursiveActor](./src/main/java/info/jab/crawler/v6/RecursiveActorCrawler.java) | [HybridActorStructural](./src/main/java/info/jab/crawler/v8/HybridActorStructuralCrawler.java) |
+| **Performance (JMH)** | **15.13 ms/op** ⭐ | **15.67 ms/op** ⭐ | 480.00 ms/op | 503.70 ms/op | 529.01 ms/op | 557.44 ms/op | 578.62 ms/op | 608.27 ms/op | 682.62 ms/op | 682.98 ms/op | 1163.03 ms/op ⚠️ | 1246.31 ms/op ⚠️ | 1462.24 ms/op ⚠️ |
+| **Throughput** | **Exceptional** | **Exceptional** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | **Highest** | Low | Low | Low |
 | **Performance Rank** | **1st** | **2nd** | 3rd | 4th | 5th | 6th | 7th | 8th | 9th | 10th | 11th | 12th | 13th |
 | **Threading** | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) | Multi-threaded (configurable) | Multi-threaded (configurable) | Multi-threaded (virtual threads) | Multi-threaded (configurable) | Single-threaded | Single-threaded | Multi-threaded (virtual threads) | Multi-threaded (virtual threads) | Multi-threaded (configurable) |
 | **Complexity** | Medium | Medium | Very Complex | Medium | Very Complex | Complex | Medium | Very Complex | Medium | Simple | Medium | Complex | Very Complex |
@@ -33,33 +33,33 @@ A repository about a collection of web crawler implementation in Java.
 
 All crawlers share the same public API and produce the same `CrawlResult` structure, making them interchangeable from a client perspective. The choice between them depends on your specific requirements, with performance being a critical factor based on JMH benchmark results:
 
-### 🏆 **Performance Leaders (Based on Latest JMH Results - 2025-01-09)**
-- **Choose Improved Structured Concurrency (v11)** for **revolutionary performance** (40.61 ms/op) - NEW CHAMPION! Addresses SoftwareMill critique with uniform cancellation, unified scope logic, and custom Joiner with race semantics
-- **Choose Jox-based Structured Concurrency (v12)** for **exceptional performance** (50.92 ms/op) - Uses SoftwareMill's Jox library with supervised scopes, cancellable forks, and addresses all JEP 505 critiques
-- **Choose Virtual Thread Actor (v10)** for **excellent performance** (687.94 ms/op) with simplified async processing and virtual thread-based actors
+### 🏆 **Performance Leaders (Based on Latest JMH Results - 2025-01-10)**
+- **Choose Improved Structured Concurrency (v11)** for **revolutionary performance** (15.13 ms/op) - NEW CHAMPION! Addresses SoftwareMill critique with uniform cancellation, unified scope logic, and custom Joiner with race semantics
+- **Choose Jox-based Structured Concurrency (v12)** for **exceptional performance** (15.67 ms/op) - Uses SoftwareMill's Jox library with supervised scopes, cancellable forks, and addresses all JEP 505 critiques
+- **Choose Producer-Consumer (v2)** for **excellent performance** (480.00 ms/op) with clear separation of concerns and proven scalability
 
 ### ⚖️ **Balanced Options**
-- **Choose Multi-threaded Iterative (v4)** for solid performance (683.07 ms/op) with efficient iterative processing and excellent stability
-- **Choose Actor (v5)** for solid performance (706.15 ms/op) with fault-tolerant, distributed systems and message-driven concurrency
-- **Choose Producer-Consumer (v2)** for solid performance (723.91 ms/op) with clear separation of concerns and proven scalability
-- **Choose Structured Queue (v13)** for solid performance (731.50 ms/op) with modern structured concurrency and queue-based coordination
-- **Choose Structured Worker (v9)** for solid performance (713.42 ms/op) with modern Java 25 structured concurrency and virtual threads
-- **Choose Recursive (v3)** for solid performance (1152.43 ms/op) with stack-safe trampoline pattern
-- **Choose Sequential (v1)** for solid performance (1305.63 ms/op) with simplicity, predictability, and smaller crawling tasks
+- **Choose Multi-threaded Iterative (v4)** for solid performance (503.70 ms/op) with efficient iterative processing and excellent stability
+- **Choose Actor (v5)** for solid performance (529.01 ms/op) with fault-tolerant, distributed systems and message-driven concurrency
+- **Choose Virtual Thread Actor (v10)** for solid performance (557.44 ms/op) with simplified async processing and virtual thread-based actors
+- **Choose Structured Queue (v13)** for solid performance (578.62 ms/op) with modern structured concurrency and queue-based coordination
+- **Choose Structured Worker (v9)** for solid performance (608.27 ms/op) with modern Java 25 structured concurrency and virtual threads
+- **Choose Recursive (v3)** for solid performance (682.62 ms/op) with stack-safe trampoline pattern
+- **Choose Sequential (v1)** for solid performance (682.98 ms/op) with simplicity, predictability, and smaller crawling tasks
 
 ### ⚠️ **Performance Concerns**
-- **Avoid Hybrid Actor-Structural (v8)** - Poor performance (1459.25 ms/op - 36x slower than best) with significant overhead
-- **Avoid Structural Concurrency (v7)** - Poor performance (1856.63 ms/op - 46x slower than best) with significant overhead
-- **Avoid Recursive Actor (v6)** - Poor performance (1893.83 ms/op - 47x slower than best) with high variance
+- **Avoid Structural Concurrency (v7)** - Poor performance (1163.03 ms/op - 77x slower than best) with significant overhead
+- **Avoid Recursive Actor (v6)** - Poor performance (1246.31 ms/op - 82x slower than best) with high variance
+- **Avoid Hybrid Actor-Structural (v8)** - Poor performance (1462.24 ms/op - 97x slower than best) with significant overhead
 
 ### 🆕 **Revolutionary Implementation**
-- **Improved Structured Concurrency (v11)** - NEW CHAMPION! Revolutionary performance breakthrough (40.61 ms/op - 1st place). Successfully addresses SoftwareMill's critique of JEP 505 with uniform cancellation, unified scope logic, timeout as method, and custom Joiner with race semantics. Demonstrates how to overcome structured concurrency limitations while maintaining benefits.
-- **Jox-based Structured Concurrency (v12)** - Revolutionary performance breakthrough (50.92 ms/op - 2nd place). Uses SoftwareMill's Jox library with supervised scopes, cancellable forks, and addresses all JEP 505 critiques. Demonstrates the power of proper structured concurrency implementation.
+- **Improved Structured Concurrency (v11)** - NEW CHAMPION! Revolutionary performance breakthrough (15.13 ms/op - 1st place). Successfully addresses SoftwareMill's critique of JEP 505 with uniform cancellation, unified scope logic, timeout as method, and custom Joiner with race semantics. Demonstrates how to overcome structured concurrency limitations while maintaining benefits.
+- **Jox-based Structured Concurrency (v12)** - Revolutionary performance breakthrough (15.67 ms/op - 2nd place). Uses SoftwareMill's Jox library with supervised scopes, cancellable forks, and addresses all JEP 505 critiques. Demonstrates the power of proper structured concurrency implementation.
 
 ### 📊 **Key Performance Insights**
-1. **Improved Structured Concurrency (v11)** achieves revolutionary performance - NEW CHAMPION at 40.61 ms/op, demonstrating how to overcome JEP 505 limitations
-2. **Jox-based Structured Concurrency (v12)** achieves exceptional performance - 50.92 ms/op, demonstrating the power of SoftwareMill's Jox library
-3. **Virtual Thread Actor (v10)** delivers excellent performance with simplified async processing
+1. **Improved Structured Concurrency (v11)** achieves revolutionary performance - NEW CHAMPION at 15.13 ms/op, demonstrating how to overcome JEP 505 limitations
+2. **Jox-based Structured Concurrency (v12)** achieves exceptional performance - 15.67 ms/op, demonstrating the power of SoftwareMill's Jox library
+3. **Producer-Consumer (v2)** delivers excellent performance with traditional Java concurrency patterns
 4. **Traditional Java concurrency** (ThreadPoolExecutor, BlockingQueue) continues to excel in performance and stability
 5. **Actor model** (v5) remains competitive with fault-tolerant, distributed systems
 6. **Structured Queue (v13)** shows solid performance with modern structured concurrency patterns

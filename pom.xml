@@ -10,6 +10,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>25</java.version>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
     <maven.compiler.compilerArgs>--enable-preview</maven.compiler.compilerArgs>
     <maven.compiler.testCompilerArgs>--enable-preview</maven.compiler.testCompilerArgs>
 
@@ -84,6 +86,12 @@
         <configuration>
           <release>${java.version}</release>
           <enablePreview>true</enablePreview>
+          <compilerArgs>
+            <arg>--enable-preview</arg>
+          </compilerArgs>
+          <testCompilerArgs>
+            <arg>--enable-preview</arg>
+          </testCompilerArgs>
         </configuration>
       </plugin>
       <!-- Maven Surefire Plugin for Unit Tests -->
@@ -245,6 +253,12 @@
           <artifactId>jmh-generator-annprocess</artifactId>
           <version>${jmh.version}</version>
           <scope>provided</scope>
+        </dependency>
+        <!-- WireMock for HTTP mocking in JMH benchmarks -->
+        <dependency>
+          <groupId>org.wiremock</groupId>
+          <artifactId>wiremock-standalone</artifactId>
+          <version>3.13.1</version>
         </dependency>
       </dependencies>
       <build>
