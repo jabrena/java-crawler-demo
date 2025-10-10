@@ -29,9 +29,6 @@ class JoxCrawlerE2ETest {
 
     @BeforeEach
     void setUp() {
-        // Clear page cache to ensure fresh tests
-        info.jab.crawler.commons.Page.clearCache();
-
         wireMockServer = new WireMockServer(8080);
         wireMockServer.start();
         WireMock.configureFor("localhost", 8080);

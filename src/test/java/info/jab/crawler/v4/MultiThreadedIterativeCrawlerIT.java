@@ -30,9 +30,6 @@ class MultiThreadedIterativeCrawlerIT {
 
     @BeforeEach
     void setUp() {
-        // Clear page cache to ensure fresh tests
-        Page.clearCache();
-
         wireMockServer = new WireMockServer(8080);
         wireMockServer.start();
         WireMock.configureFor("localhost", 8080);
