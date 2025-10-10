@@ -17,16 +17,18 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 /**
  * JMH benchmark for crawler implementations performance testing.
- * This benchmark tests all 8 crawler implementations against the Cursor Rules for Java website
- * to measure and compare their performance characteristics.
+ * This benchmark tests all crawler implementations against the actual
+ * https://jabrena.github.io/cursor-rules-java/ website for real-world performance evaluation.
  *
- * Test URL: https://jabrena.github.io/cursor-rules-java/
+ * Features:
+ * - Tests against live website with real network latency
+ * - Provides actual performance measurements under real conditions
+ * - Tests real-world error handling and edge cases
+ * - JFR profiling enabled for detailed performance analysis
  *
  * Crawler implementations tested:
  * 1. Sequential Crawler (v1)
@@ -41,6 +43,7 @@ import java.util.regex.Pattern;
  * 10. Virtual Thread Actor Crawler (v10)
  * 11. Improved Structured Concurrency Crawler (v11)
  * 12. Jox-based Structured Concurrency Crawler (v12)
+ * 13. Structured Queue Crawler (v13)
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -50,7 +53,7 @@ import java.util.regex.Pattern;
 @Measurement(iterations = 5)
 public class CrawlerBenchmark {
 
-    // Test URL: Cursor Rules for Java website
+    // Real website URL for testing
     private static final String TEST_URL = "https://jabrena.github.io/cursor-rules-java/";
 
     // Benchmark configuration for consistent testing
@@ -59,6 +62,8 @@ public class CrawlerBenchmark {
     private static final int TIMEOUT_MS = 5000;
     private static final boolean FOLLOW_EXTERNAL_LINKS = false;
     private static final int NUM_THREADS = 4;
+
+
 
     // ============================================================================
     // CRAWLER IMPLEMENTATION BENCHMARKS
@@ -215,6 +220,7 @@ public class CrawlerBenchmark {
         return crawler.crawl(TEST_URL);
     }
 
+
     // ============================================================================
     // UTILITY METHODS
     // ============================================================================
@@ -244,21 +250,32 @@ public class CrawlerBenchmark {
     }
 
     /**
-     * Main method to run benchmarks with JSON output configuration
-     * Tests all crawler implementations against the Cursor Rules for Java website
+     * Main method to run benchmarks with JSON output configuration and JFR profiling
+     * Tests all crawler implementations against the real website
+     *
+     * Usage:
+     * mvn exec:java -Pjmh -Dexec.mainClass="info.jab.crawler.benchmarks.CrawlerBenchmark"
      */
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
                 .include(CrawlerBenchmark.class.getSimpleName())
                 .resultFormat(ResultFormatType.JSON)
                 .result("src/jmh/test/resources/jmh-crawler-benchmark-results.json")
+                .addProfiler("jfr", "dir=src/jmh/test/resources")  // Enable JFR profiling with output directory
                 .build();
 
         System.out.println("🚀 Starting JMH benchmarks for all crawler implementations");
-        System.out.println("📊 Test URL: " + TEST_URL);
-        System.out.println("⚙️  Configuration: maxDepth=" + MAX_DEPTH + ", maxPages=" + MAX_PAGES + ", timeout=" + TIMEOUT_MS + "ms");
-        System.out.println("🧵 Threads: " + NUM_THREADS + " (for multi-threaded crawlers)");
+        System.out.println("🌐 Real Website Configuration:");
+        System.out.println("   • Target: " + TEST_URL);
+        System.out.println("   • Real network latency and conditions");
+        System.out.println("   • Live error handling and edge cases");
+        System.out.println();
+        System.out.println("⚙️  Configuration:");
+        System.out.println("   • maxDepth=" + MAX_DEPTH + ", maxPages=" + MAX_PAGES + ", timeout=" + TIMEOUT_MS + "ms");
+        System.out.println("   • Threads: " + NUM_THREADS + " (for multi-threaded crawlers)");
         System.out.println("📈 Results will be saved to: src/jmh/test/resources/jmh-crawler-benchmark-results.json");
+        System.out.println("🔍 JFR profiling enabled - flight recorder files will be generated in src/jmh/test/resources/");
+        System.out.println("📁 JFR files will be named: <benchmark-name>.jfr");
         System.out.println();
 
         new Runner(options).run();
